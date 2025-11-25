@@ -71,6 +71,7 @@ export const SimulationDashboard: React.FC = () => {
   const bannedRef = useRef(bannedIps);
   const whitelistedRef = useRef(whitelistedIps);
   const ipHistoryRef = useRef<IpHistory>({});
+  const requestCountRef = useRef(0);
 
   // Sync refs
   useEffect(() => { statsRef.current = stats; }, [stats]);
@@ -116,6 +117,9 @@ export const SimulationDashboard: React.FC = () => {
 
     setEvents(prev => [evt, ...prev].slice(0, 50));
 
+    // Increment request counter for RPS tracking
+    requestCountRef.current++;
+
     // Update Stats
     setStats(prev => ({
       ...prev,
@@ -147,23 +151,49 @@ export const SimulationDashboard: React.FC = () => {
     const interval = setInterval(() => {
       tickCount++;
 
-      // 1. Simulate Players (Good Traffic)
+      // 1. Simulate Players (Good Traffic) - Various endpoints and protocols
       if (playerCount > 0) {
-        // Random chance per player to send a heartbeat
+        // Random chance per player to send requests
         if (Math.random() < 0.4) {
           const numReqs = Math.ceil(playerCount / 5);
           for (let i = 0; i < numReqs; i++) {
             const ip = `10.0.0.${(i % 100) + 100}`;
             if (bannedRef.current.includes(ip)) continue;
 
-            addEvent({
-              ip,
-              path: '/info.json',
-              method: 'GET',
-              status: 200,
-              ua: 'CitizenFX/1.0',
-              type: 'good'
-            });
+            // Players send various types of requests
+            const requestType = Math.random();
+            if (requestType < 0.4) {
+              // HTTP info requests
+              const paths = ['/info.json', '/players.json', '/dynamic.json', '/server.cfg'];
+              addEvent({
+                ip,
+                path: paths[Math.floor(Math.random() * paths.length)],
+                method: 'GET',
+                status: 200,
+                ua: 'CitizenFX/1.0',
+                type: 'good'
+              });
+            } else if (requestType < 0.7) {
+              // UDP packets (game traffic)
+              addEvent({
+                ip,
+                path: 'UDP:30120',
+                method: 'GAME',
+                status: 200,
+                ua: 'FiveM/2699',
+                type: 'good'
+              });
+            } else {
+              // TCP connections (voice, sync)
+              addEvent({
+                ip,
+                path: 'TCP:30120',
+                method: 'SYNC',
+                status: 200,
+                ua: 'FiveM/2699',
+                type: 'good'
+              });
+            }
           }
         }
       }
@@ -249,24 +279,28 @@ export const SimulationDashboard: React.FC = () => {
 
       // Update RPS Graph every second (approx 5 ticks)
       if (tickCount % 5 === 0) {
-        const baseRps = playerCount + (isAttacking ? 100 : 0);
-        const udpRps = isUdpFlooding ? 200 : 0;
-        const tcpRps = isTcpFlooding ? 100 : 0;
-        const currentRps = baseRps + udpRps + tcpRps + Math.floor(Math.random() * 50);
+        // Use actual request count from the last second
+        const currentRps = requestCountRef.current;
+        requestCountRef.current = 0; // Reset counter
+        
         setStats(prev => ({ ...prev, rps: currentRps }));
         setRpsHistory(prev => [...prev.slice(1), currentRps]);
 
-        // Simulate UDP/TCP packet rates
+        // Calculate UDP/TCP packet rates based on actual events
+        const recentEvents = events.slice(0, 10);
+        const udpCount = recentEvents.filter(e => e.path.startsWith('UDP:')).length;
+        const tcpCount = recentEvents.filter(e => e.path.startsWith('TCP:')).length;
+        
         const baseUdp = playerCount * 20;
         const baseTcp = playerCount * 2;
-        setUdpPacketRate(baseUdp + (isAttacking ? Math.floor(Math.random() * 500) : 0) + (isUdpFlooding ? 5000 : 0));
-        setTcpPacketRate(baseTcp + (isAttacking ? Math.floor(Math.random() * 50) : 0) + (isTcpFlooding ? 2000 : 0));
+        setUdpPacketRate(baseUdp + udpCount * 100 + (isUdpFlooding ? 5000 : 0));
+        setTcpPacketRate(baseTcp + tcpCount * 50 + (isTcpFlooding ? 2000 : 0));
       }
 
     }, 200);
 
     return () => clearInterval(interval);
-  }, [playerCount, isAttacking, autoBanEnabled, isUdpFlooding, isTcpFlooding, addEvent, checkRateLimitViolation]);
+  }, [playerCount, isAttacking, autoBanEnabled, isUdpFlooding, isTcpFlooding, addEvent, checkRateLimitViolation, events]);
 
 
   // --- Handlers ---
@@ -285,6 +319,7 @@ export const SimulationDashboard: React.FC = () => {
     setAlerts([]);
     setRpsHistory(new Array(30).fill(0));
     ipHistoryRef.current = {};
+    requestCountRef.current = 0;
     setPlayerCount(0);
     setIsAttacking(false);
     setIsUdpFlooding(false);
@@ -337,7 +372,7 @@ export const SimulationDashboard: React.FC = () => {
             <h3 className="text-amber-400 font-bold mb-1">100% Offline Browser Simulation</h3>
             <p className="text-sm text-slate-300">
               This simulation runs entirely in your browser with <strong className="text-amber-300">zero network activity</strong>. 
-              No real traffic is sent or received — it's a visual demonstration of firewall concepts. 
+              No real traffic is sent or received - it's a visual demonstration of firewall concepts. 
               Real DDoS protection requires actual server-side tools like iptables, fail2ban, nginx rate limiting, and CloudFlare.
             </p>
           </div>
