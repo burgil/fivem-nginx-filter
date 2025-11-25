@@ -64,7 +64,7 @@ export default function FiveMFilterGuide() {
           </nav>
 
           <div className="text-xs text-slate-500 font-mono">
-            v2.1.0
+            v2.6.15
           </div>
         </div>
       </header>
@@ -1183,7 +1183,7 @@ sudo /opt/fivem-watcher/analyze.sh > /tmp/attack_report_$(date +%Y%m%d_%H%M%S).t
                     <span>☁️</span> Cloudflare Proxy (Alternative/Additional Layer)
                   </h3>
                   <p className="text-sm text-slate-400 mb-4">
-                    Add Cloudflare as an additional proxy layer for HTTPS traffic and DDoS protection. 
+                    Add Cloudflare as an additional proxy layer for HTTPS traffic and DDoS protection.
                     <strong className="text-blue-400"> Note: UDP traffic requires Cloudflare Spectrum (paid add-on).</strong>
                   </p>
 
@@ -1229,8 +1229,8 @@ set sv_endpointprivacy true`}
 
                   <div className="bg-amber-900/10 border border-amber-500/30 p-3 rounded mt-4">
                     <p className="text-xs text-amber-300">
-                      <strong>⚠️ Important:</strong> Cloudflare free plan only proxies HTTP/HTTPS traffic. 
-                      UDP traffic (game data) requires <strong>Cloudflare Spectrum</strong> ($5+/month). 
+                      <strong>⚠️ Important:</strong> Cloudflare free plan only proxies HTTP/HTTPS traffic.
+                      UDP traffic (game data) requires <strong>Cloudflare Spectrum</strong> ($5+/month).
                       Without Spectrum, UDP goes direct to your server IP, so you still need firewall rules.
                     </p>
                   </div>
@@ -1589,14 +1589,14 @@ if ($whitelist = 0) {
         <div className="fixed inset-0 z-100 flex items-end justify-center pointer-events-none">
           {/* Backdrop blur */}
           <div className="absolute inset-0 bg-linear-to-b from-transparent via-slate-900/80 to-slate-900 backdrop-blur-md pointer-events-auto" />
-          
+
           {/* Drawer */}
           <div className="relative w-full max-w-2xl mb-0 pointer-events-auto animate-slide-up">
             <div className="bg-linear-to-br from-slate-800 via-slate-900 to-black border-t-4 border-blue-500 rounded-t-3xl shadow-2xl shadow-blue-500/20 p-8 md:p-12">
-              
+
               {/* Decorative glow */}
               <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl" />
-              
+
               <div className="relative z-10">
                 {/* Icon & Badge */}
                 <div className="flex flex-col items-center mb-6">
