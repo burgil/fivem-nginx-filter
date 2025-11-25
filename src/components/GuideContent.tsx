@@ -8,7 +8,7 @@ export const GuideContent: React.FC = () => {
       {/* ========================================
           TABLE OF CONTENTS
       ======================================== */}
-      <section className="bg-slate-800/30 border border-slate-700 rounded-xl p-6 sticky top-20 z-10 backdrop-blur-sm">
+      <section className="bg-slate-800/30 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
         <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
           <span className="text-blue-500">📋</span> Table of Contents
         </h2>
