@@ -4,7 +4,7 @@ import { CodeBlock } from './CodeBlock';
 export const GuideContent: React.FC = () => {
   return (
     <div className="space-y-16 text-slate-300">
-      
+
       {/* ========================================
           TABLE OF CONTENTS
       ======================================== */}
@@ -49,7 +49,7 @@ export const GuideContent: React.FC = () => {
         </div>
         <div className="mt-4 pt-4 border-t border-slate-700">
           <p className="text-xs text-slate-400">
-            <strong className="text-slate-300">Quick Start:</strong> New to NGINX filtering? Start with <a href="#intro" className="text-blue-400 hover:underline">Why NGINX Filtering?</a>, 
+            <strong className="text-slate-300">Quick Start:</strong> New to NGINX filtering? Start with <a href="#intro" className="text-blue-400 hover:underline">Why NGINX Filtering?</a>,
             try the <a href="#simulator" className="text-blue-400 hover:underline">Interactive Simulator</a>, then follow the setup guides in order.
           </p>
         </div>
@@ -62,12 +62,12 @@ export const GuideContent: React.FC = () => {
         <h2 className="text-4xl font-bold text-white mb-8 flex items-center gap-3">
           <span className="text-blue-500">#</span> Why NGINX Filtering?
         </h2>
-        
+
         {/* The Problem */}
         <div className="bg-red-900/10 border-l-4 border-red-500 p-6 rounded-r-lg mb-8">
           <h3 className="text-xl font-bold text-red-400 mb-3">The Problem: Why FiveM Servers Are Vulnerable</h3>
           <p className="text-slate-300 leading-relaxed mb-3">
-            FiveM servers are <strong>prime targets for Layer 7 (Application Layer) and Layer 4 (Transport Layer) attacks</strong>. 
+            FiveM servers are <strong>prime targets for Layer 7 (Application Layer) and Layer 4 (Transport Layer) attacks</strong>.
             The architecture exposes multiple attack vectors:
           </p>
           <ul className="list-disc list-inside space-y-2 text-slate-400">
@@ -79,8 +79,8 @@ export const GuideContent: React.FC = () => {
           </ul>
           <div className="bg-red-800/20 p-3 rounded mt-4">
             <p className="text-sm text-red-200">
-              <strong>Reality Check:</strong> Even with <code>sv_requestParanoia 3</code>, FiveM's built-in protections are reactive and limited. 
-              By the time FXServer detects abuse, hundreds of malicious requests have already hit your server. 
+              <strong>Reality Check:</strong> Even with <code>sv_requestParanoia 3</code>, FiveM's built-in protections are reactive and limited.
+              By the time FXServer detects abuse, hundreds of malicious requests have already hit your server.
               <strong>You need upstream filtering to stop attacks before they reach FXServer.</strong>
             </p>
           </div>
@@ -90,8 +90,8 @@ export const GuideContent: React.FC = () => {
         <div className="bg-blue-900/10 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
           <h3 className="text-xl font-bold text-blue-400 mb-3">The "Blast Shield" Solution: NGINX Reverse Proxy Architecture</h3>
           <p className="text-slate-300 leading-relaxed mb-4">
-            Deploy a <strong>Linux NGINX proxy</strong> as an upstream filter in front of your Windows FiveM server. 
-            This creates a <strong>defense-in-depth architecture</strong> where NGINX handles Layer 7 filtering, rate limiting, and connection management 
+            Deploy a <strong>Linux NGINX proxy</strong> as an upstream filter in front of your Windows FiveM server.
+            This creates a <strong>defense-in-depth architecture</strong> where NGINX handles Layer 7 filtering, rate limiting, and connection management
             <em>before</em> traffic reaches FXServer. Think of it as a dedicated firewall + load balancer + traffic analyzer combined.
           </p>
           <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -100,7 +100,7 @@ export const GuideContent: React.FC = () => {
                 <span>🛡️</span> Layer 7 (HTTP) Filtering
               </div>
               <p className="text-xs text-slate-400">
-                Inspect HTTP headers, User-Agents, request paths, query strings. Use <code>map</code> directives to blacklist/whitelist patterns. 
+                Inspect HTTP headers, User-Agents, request paths, query strings. Use <code>map</code> directives to blacklist/whitelist patterns.
                 Block scrapers, bots, and exploit attempts (<code>/wp-admin</code>, <code>/.env</code>) at the proxy level.
                 <strong className="text-blue-300"> Attacker requests never reach FXServer.</strong>
               </p>
@@ -110,7 +110,7 @@ export const GuideContent: React.FC = () => {
                 <span>⚡</span> Token Bucket Rate Limiting
               </div>
               <p className="text-xs text-slate-400">
-                Use <code>limit_req_zone</code> with burst buffers to enforce per-IP limits. Example: 5 req/s for <code>/info.json</code>, 10 req/s globally. 
+                Use <code>limit_req_zone</code> with burst buffers to enforce per-IP limits. Example: 5 req/s for <code>/info.json</code>, 10 req/s globally.
                 Legitimate players generate ~2-3 req/s. Attackers trying 100+ req/s hit the limit instantly and get <code>503 Service Unavailable</code>.
               </p>
             </div>
@@ -119,7 +119,7 @@ export const GuideContent: React.FC = () => {
                 <span>🔒</span> Network Isolation (Different Subnet)
               </div>
               <p className="text-xs text-slate-400">
-                Your Windows server lives on a <strong>private subnet</strong> (10.0.0.0/24). The proxy has dual interfaces: one public (1.2.3.4), one private (10.0.0.1). 
+                Your Windows server lives on a <strong>private subnet</strong> (10.0.0.0/24). The proxy has dual interfaces: one public (1.2.3.4), one private (10.0.0.1).
                 Attackers scanning your public IP range won't find the game server. <strong>No VPN needed - just a different subnet from your hosting provider.</strong>
               </p>
             </div>
@@ -128,7 +128,7 @@ export const GuideContent: React.FC = () => {
                 <span>📊</span> Real-Time Monitoring & Auto-Ban
               </div>
               <p className="text-xs text-slate-400">
-                A Node.js "Watcher" tails NGINX access logs, detects attack patterns (e.g., {'>'}100 requests with {'>'}70% blocked), and auto-bans via <code>iptables</code>. 
+                A Node.js "Watcher" tails NGINX access logs, detects attack patterns (e.g., {'>'}100 requests with {'>'}70% blocked), and auto-bans via <code>iptables</code>.
                 Exposes JSON API for building dashboards with <strong>live RPS graphs, IP history, ban lists, and alert feeds</strong>.
               </p>
             </div>
@@ -143,7 +143,7 @@ export const GuideContent: React.FC = () => {
             </ul>
           </div>
           <p className="text-sm text-slate-400 italic mt-4">
-            <strong>Result:</strong> A "clean pipe" architecture where only valid, rate-limited traffic reaches FXServer. 
+            <strong>Result:</strong> A "clean pipe" architecture where only valid, rate-limited traffic reaches FXServer.
             Your server crashes less, runs faster, and can handle larger player counts without performance degradation.
           </p>
         </div>
@@ -251,9 +251,9 @@ export const GuideContent: React.FC = () => {
           <div className="bg-amber-900/10 border border-amber-500/30 p-4 rounded-lg mt-4">
             <h4 className="font-bold text-amber-400 mb-2">⚠️ Critical: Use Different Subnets</h4>
             <p className="text-sm text-slate-400">
-              <strong>Do NOT</strong> put both servers on the same public subnet. If your proxy is <code>1.2.3.4</code>, 
+              <strong>Do NOT</strong> put both servers on the same public subnet. If your proxy is <code>1.2.3.4</code>,
               don't make your game server <code>1.2.3.5</code> – attackers will scan adjacent IPs.
-              Instead, <strong>request a private subnet from your hosting provider</strong> (most offer this for free). 
+              Instead, <strong>request a private subnet from your hosting provider</strong> (most offer this for free).
               Popular options: OVH vRack, Hetzner Cloud Private Networks, or simply ask your provider for a second IP on a different subnet.
             </p>
           </div>
@@ -283,7 +283,7 @@ export const GuideContent: React.FC = () => {
           SSH into your Linux proxy server and run these commands:
         </p>
 
-        <CodeBlock 
+        <CodeBlock
           title="Terminal - Initial Setup"
           code={`# Update system packages
 sudo apt update && sudo apt upgrade -y
@@ -317,7 +317,7 @@ sudo systemctl start nginx`}
 
         <div className="bg-blue-900/10 border border-blue-500/30 p-4 rounded-lg mt-6">
           <p className="text-sm text-blue-300">
-            <strong>✓ Checkpoint:</strong> Visit <code>http://YOUR_PUBLIC_IP</code> in a browser. 
+            <strong>✓ Checkpoint:</strong> Visit <code>http://YOUR_PUBLIC_IP</code> in a browser.
             You should see the default NGINX welcome page.
           </p>
         </div>
@@ -336,7 +336,7 @@ sudo systemctl start nginx`}
           This is the core logic. Save this to <code className="text-blue-400">/etc/nginx/conf.d/fivem_filter.conf</code>
         </p>
 
-        <CodeBlock 
+        <CodeBlock
           title="/etc/nginx/conf.d/fivem_filter.conf"
           code={`# FiveM HTTP Filter Configuration
 # Protects /info.json, /players.json, and other HTTP endpoints
@@ -458,7 +458,7 @@ server {
             <h4 className="font-bold text-amber-400 mb-2">⚠️ Testing Tip</h4>
             <p className="text-sm text-slate-400">
               After creating this file, test the config with: <code className="text-white">sudo nginx -t</code>
-              <br/>Then reload: <code className="text-white">sudo systemctl reload nginx</code>
+              <br />Then reload: <code className="text-white">sudo systemctl reload nginx</code>
             </p>
           </div>
         </div>
@@ -478,7 +478,7 @@ server {
           Add this to <code className="text-blue-400">/etc/nginx/nginx.conf</code> (at the <strong>top level</strong>, outside the <code>http</code> block):
         </p>
 
-        <CodeBlock 
+        <CodeBlock
           title="/etc/nginx/nginx.conf (append to the end)"
           code={`# Add this OUTSIDE the http {} block (at the top level)
 
@@ -514,13 +514,13 @@ stream {
         <div className="bg-green-900/10 border border-green-500/30 p-4 rounded-lg mt-6">
           <h4 className="font-bold text-green-400 mb-2">✓ Why Both TCP and UDP?</h4>
           <p className="text-sm text-slate-400">
-            FiveM uses <strong>TCP for initial connection negotiation</strong> and <strong>UDP for game data</strong>. 
+            FiveM uses <strong>TCP for initial connection negotiation</strong> and <strong>UDP for game data</strong>.
             You need both proxy blocks to ensure players can connect and play.
           </p>
         </div>
 
         <div className="mt-4">
-          <CodeBlock 
+          <CodeBlock
             title="Verify & Reload NGINX"
             code={`# Test configuration
 sudo nginx -t
@@ -547,7 +547,7 @@ sudo netstat -tulpn | grep 30120`}
           Configure your <code>server.cfg</code> to work with the proxy:
         </p>
 
-        <CodeBlock 
+        <CodeBlock
           title="server.cfg"
           code={`# ============================================
 # Proxy Configuration
@@ -585,7 +585,7 @@ set onesync on`}
           <p className="text-sm text-slate-400 mb-3">
             On your Windows server, create an inbound rule to <strong>ONLY allow</strong> traffic from the proxy:
           </p>
-          <CodeBlock 
+          <CodeBlock
             title="PowerShell (Run as Administrator)"
             code={`# Block all traffic on 30120 by default
 New-NetFirewallRule -DisplayName "Block FiveM Port" \`
@@ -608,9 +608,9 @@ New-NetFirewallRule -DisplayName "Allow FiveM from Proxy UDP" \`
         <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded">
           <p className="text-sm text-blue-300">
             <strong>📖 Official Reference:</strong> For more details on proxy setup, see the{' '}
-            <a 
-              href="https://docs.fivem.net/docs/server-manual/proxy-setup/" 
-              target="_blank" 
+            <a
+              href="https://docs.fivem.net/docs/server-manual/proxy-setup/"
+              target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-white font-bold"
             >
@@ -638,7 +638,7 @@ New-NetFirewallRule -DisplayName "Allow FiveM from Proxy UDP" \`
           {/* Setup */}
           <div>
             <h4 className="text-lg font-bold text-white mb-3">Setup</h4>
-            <CodeBlock 
+            <CodeBlock
               title="Terminal"
               code={`# Create project directory
 sudo mkdir -p /opt/fivem-watcher
@@ -655,7 +655,7 @@ sudo npm install tail express`}
           {/* Watcher Script */}
           <div>
             <h4 className="text-lg font-bold text-white mb-3">Watcher Script</h4>
-            <CodeBlock 
+            <CodeBlock
               title="/opt/fivem-watcher/watcher.js"
               code={`const Tail = require('tail').Tail;
 const express = require('express');
@@ -814,7 +814,7 @@ app.listen(PORT, () => {
           {/* Systemd Service */}
           <div>
             <h4 className="text-lg font-bold text-white mb-3">Run as a Service</h4>
-            <CodeBlock 
+            <CodeBlock
               title="/etc/systemd/system/fivem-watcher.service"
               code={`[Unit]
 Description=FiveM NGINX Watcher
@@ -831,7 +831,7 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target`}
             />
-            <CodeBlock 
+            <CodeBlock
               title="Terminal - Enable Service"
               code={`# Reload systemd
 sudo systemctl daemon-reload
@@ -854,7 +854,7 @@ sudo journalctl -u fivem-watcher -f`}
             <p className="text-sm text-slate-400 mb-3">
               You can now query the watcher from any tool:
             </p>
-            <CodeBlock 
+            <CodeBlock
               title="Examples"
               code={`# Get current stats
 curl http://YOUR_PROXY_IP:3000/stats
@@ -885,7 +885,7 @@ curl -X POST http://YOUR_PROXY_IP:3000/unban/192.168.1.100`}
           After an attack, you need to analyze the logs to understand what happened. This script generates a detailed report.
         </p>
 
-        <CodeBlock 
+        <CodeBlock
           title="/opt/fivem-watcher/analyze.sh"
           code={`#!/bin/bash
 # FiveM Attack Analysis Script
@@ -941,7 +941,7 @@ echo "  Report Complete"
 echo "========================================="`}
         />
 
-        <CodeBlock 
+        <CodeBlock
           title="Make executable and run"
           code={`# Make executable
 sudo chmod +x /opt/fivem-watcher/analyze.sh
@@ -964,7 +964,7 @@ sudo /opt/fivem-watcher/analyze.sh > /tmp/attack_report_$(date +%Y%m%d_%H%M%S).t
         </div>
 
         <div className="space-y-8">
-          
+
           {/* SSL/TLS */}
           <div className="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
@@ -973,7 +973,7 @@ sudo /opt/fivem-watcher/analyze.sh > /tmp/attack_report_$(date +%Y%m%d_%H%M%S).t
             <p className="text-sm text-slate-400 mb-3">
               Use Let's Encrypt to secure your HTTP endpoints:
             </p>
-            <CodeBlock 
+            <CodeBlock
               title="Terminal"
               code={`# Install Certbot
 sudo apt install certbot python3-certbot-nginx -y
@@ -994,7 +994,7 @@ sudo nginx -t && sudo systemctl reload nginx`}
             <p className="text-sm text-slate-400 mb-3">
               Block entire countries if you're being attacked from specific regions:
             </p>
-            <CodeBlock 
+            <CodeBlock
               title="Install GeoIP Module"
               code={`sudo apt install libnginx-mod-http-geoip -y
 sudo mkdir -p /usr/share/GeoIP
@@ -1003,7 +1003,7 @@ sudo wget https://dl.miyuru.lk/geoip/maxmind/country/maxmind.dat.gz
 sudo gunzip maxmind.dat.gz
 sudo mv maxmind.dat GeoIP.dat`}
             />
-            <CodeBlock 
+            <CodeBlock
               title="Add to nginx.conf (in http block)"
               code={`http {
     geoip_country /usr/share/GeoIP/GeoIP.dat;
@@ -1030,10 +1030,10 @@ sudo mv maxmind.dat GeoIP.dat`}
             <p className="text-sm text-slate-400 mb-4">
               The watcher API returns JSON. Here's how to build a professional admin dashboard with real-time graphs:
             </p>
-            
+
             <div className="bg-black/30 p-4 rounded mb-4">
               <h4 className="text-sm font-bold text-white mb-2">Example: Real-Time RPS Graph</h4>
-              <CodeBlock 
+              <CodeBlock
                 title="dashboard.html"
                 code={`<!DOCTYPE html>
 <html>
@@ -1088,7 +1088,7 @@ sudo mv maxmind.dat GeoIP.dat`}
 
             <div className="bg-black/30 p-4 rounded mb-4">
               <h4 className="text-sm font-bold text-white mb-2">Example: Top Attacking IPs Table</h4>
-              <CodeBlock 
+              <CodeBlock
                 title="ip-table.js"
                 code={`async function updateIPTable() {
     const res = await fetch('http://YOUR_PROXY_IP:3000/stats');
@@ -1127,7 +1127,7 @@ setInterval(updateIPTable, 2000);`}
 
             <div className="bg-black/30 p-4 rounded">
               <h4 className="text-sm font-bold text-white mb-2">Example: Status Code Pie Chart</h4>
-              <CodeBlock 
+              <CodeBlock
                 title="status-chart.js"
                 code={`const statusCtx = document.getElementById('statusChart').getContext('2d');
 const statusChart = new Chart(statusCtx, {
@@ -1166,7 +1166,7 @@ setInterval(async () => {
             </div>
 
             <p className="text-sm text-slate-500 mt-4 italic">
-              The interactive simulation at the top of this page demonstrates these concepts. 
+              The interactive simulation at the top of this page demonstrates these concepts.
               Deploy your own dashboard using these examples and monitor your server in real-time!
             </p>
           </div>
@@ -1179,7 +1179,7 @@ setInterval(async () => {
             <p className="text-sm text-slate-400 mb-3">
               During severe attacks, switch to "whitelist only" mode:
             </p>
-            <CodeBlock 
+            <CodeBlock
               title="Add to nginx config"
               code={`# Create whitelist map
 geo $whitelist {
@@ -1204,7 +1204,7 @@ if ($whitelist = 0) {
             <p className="text-sm text-slate-400 mb-3">
               Scale horizontally by adding more game servers:
             </p>
-            <CodeBlock 
+            <CodeBlock
               title="Update upstream block"
               code={`upstream fivem_backend {
     least_conn;  # Load balancing method
