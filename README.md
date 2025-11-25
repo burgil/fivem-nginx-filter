@@ -1,5 +1,7 @@
 # FiveM Nginx Filter - Demo & Simulation
 
+![FiveM Nginx Filter](preview-1.png)
+
 I worked with an AI to create a demo and explanation page showing how to implement a FiveM filter for Nginx to protect against attacks:
 
 - Live demo & explanation: https://fivem-nginx-filter.pages.dev/
@@ -11,6 +13,8 @@ I worked with an AI to create a demo and explanation page showing how to impleme
 
 Simulation UI source code (can be converted to a real interface when your Nginx filter runs):
 - GitHub repo: https://github.com/burgil/fivem-nginx-filter
+
+![Simulator - FiveM Nginx Filter](preview-2.png)
 
 ## React + TypeScript + Vite
 
