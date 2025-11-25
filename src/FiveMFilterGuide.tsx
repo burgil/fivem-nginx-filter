@@ -256,11 +256,11 @@ export default function FiveMFilterGuide() {
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
                     <div className="text-green-400 font-bold mb-2 flex items-center gap-2">
-                      <Lock className="w-4 h-4" /> Network Segmentation (Private Subnet)
+                      <Lock className="w-4 h-4" /> IP Obfuscation via Proxy
                     </div>
                     <p className="text-xs text-slate-400">
-                      Your Windows server lives on a <strong>private subnet</strong> (10.0.0.0/24) separate from the public subnet. The proxy has dual interfaces: one public (1.2.3.4), one private (10.0.0.1).
-                      Attackers scanning your public IP range won't find the game server. <strong>No VPN needed - just request a private subnet from your hosting provider.</strong>
+                      Players connect to the proxy's public IP only. Your Windows server IP is never exposed in server lists or DNS records.
+                      Even if attackers scan adjacent IPs near your proxy, they won't know which IP (if any) hosts the actual game server. <strong>The proxy acts as the single point of contact.</strong>
                     </p>
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
@@ -279,7 +279,7 @@ export default function FiveMFilterGuide() {
                     <li>• <strong>HTTP Floods:</strong> Rate limiter drops excess requests. Attacker sees 503 errors, FXServer stays responsive.</li>
                     <li>• <strong>UDP Floods:</strong> NGINX <code>stream</code> module proxies UDP with connection tracking. Malicious IPs get banned by watcher.</li>
                     <li>• <strong>SYN Floods:</strong> Linux kernel handles TCP better than Windows. NGINX absorbs SYN floods with <code>tcp_syncookies</code>.</li>
-                    <li>• <strong>IP Obfuscation:</strong> Private subnet (separate from public subnet) means attackers can't find your game server IP even if they know your public proxy IP.</li>
+                    <li>• <strong>IP Obfuscation:</strong> Only the proxy IP is advertised. Attackers can't discover your game server's IP since it's never exposed in DNS, server lists, or direct connections.</li>
                   </ul>
                 </div>
                 <p className="text-sm text-slate-400 italic mt-4">
@@ -301,7 +301,7 @@ export default function FiveMFilterGuide() {
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                     <div>
-                      <strong>Prevents IP Discovery:</strong> By placing your game server on a private subnet (not on the same public subnet as the proxy), attackers can't discover your game server's IP through IP scanning.
+                      <strong>Hides Server IP:</strong> Only the proxy IP is publicly advertised. Your game server's IP remains unknown to attackers since it's never listed in server browsers or DNS records.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
@@ -425,12 +425,12 @@ export default function FiveMFilterGuide() {
             `}</pre>
                 </div>
                 <div className="bg-amber-900/10 border border-amber-500/30 p-4 rounded-lg mt-4">
-                  <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Critical: Separate Public and Private Subnets</h4>
+                  <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Critical: Don't Use Adjacent Public IPs</h4>
                   <p className="text-sm text-slate-400">
-                    <strong>Do NOT</strong> put both servers on the same public subnet. If your proxy is <code>1.2.3.4</code>,
-                    don't make your game server <code>1.2.3.5</code> – attackers will scan adjacent IPs.
-                    Instead, <strong>place your Windows server on a private subnet</strong> that's separate from your public-facing subnet (most hosting providers offer this for free).
-                    Popular options: OVH vRack, Hetzner Cloud Private Networks, or AWS/Azure VPC private subnets.
+                    <strong>Do NOT</strong> use consecutive public IPs for both servers. If your proxy is <code>1.2.3.4</code>,
+                    don't make your game server <code>1.2.3.5</code> – attackers will scan adjacent IPs and find it.
+                    <strong>Best practice:</strong> Use a completely different IP range for your game server, or use private IPs (10.x.x.x) if both servers are in the same datacenter.
+                    Most providers offer private networking (OVH vRack, Hetzner Cloud Networks, AWS VPC) where servers communicate via internal IPs.
                   </p>
                 </div>
               </div>
