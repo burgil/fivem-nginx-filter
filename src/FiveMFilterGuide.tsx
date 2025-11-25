@@ -2,10 +2,42 @@ import { SimulationDashboard } from './components/SimulationDashboard';
 import { CodeBlock } from './components/CodeBlock';
 import { Zap, Target, Lock, BarChart3, Rocket, Gamepad2, Shield, AlertTriangle, FileText, CheckCircle, Server, Monitor } from 'lucide-react';
 
+import { useState, useEffect } from 'react';
+
 export default function FiveMFilterGuide() {
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
+
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Detect scroll position to show drawer
+  useEffect(() => {
+    if (isUnlocked) return;
+
+    const handleScroll = () => {
+      const simulationSection = document.getElementById('simulation');
+      if (simulationSection) {
+        const rect = simulationSection.getBoundingClientRect();
+        // Show drawer when simulation section is visible
+        if (rect.top < window.innerHeight / 2 && !showDrawer) {
+          setShowDrawer(true);
+          // Prevent scrolling
+          document.body.style.overflow = 'hidden';
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isUnlocked, showDrawer]);
+
+  const handleUnlock = () => {
+    setIsUnlocked(true);
+    setShowDrawer(false);
+    document.body.style.overflow = 'auto';
   };
 
   return (
@@ -1551,6 +1583,94 @@ if ($whitelist = 0) {
         </div>
 
       </main>
+
+      {/* Unlock Drawer */}
+      {showDrawer && !isUnlocked && (
+        <div className="fixed inset-0 z-100 flex items-end justify-center pointer-events-none">
+          {/* Backdrop blur */}
+          <div className="absolute inset-0 bg-linear-to-b from-transparent via-slate-900/80 to-slate-900 backdrop-blur-md pointer-events-auto" />
+          
+          {/* Drawer */}
+          <div className="relative w-full max-w-2xl mb-0 pointer-events-auto animate-slide-up">
+            <div className="bg-linear-to-br from-slate-800 via-slate-900 to-black border-t-4 border-blue-500 rounded-t-3xl shadow-2xl shadow-blue-500/20 p-8 md:p-12">
+              
+              {/* Decorative glow */}
+              <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl" />
+              
+              <div className="relative z-10">
+                {/* Icon & Badge */}
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/50 transform rotate-3">
+                    <Lock className="w-10 h-10 text-white" />
+                  </div>
+                  <span className="px-4 py-1.5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30 uppercase tracking-wider">
+                    Premium Content Ahead
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-3xl md:text-4xl font-extrabold text-white text-center mb-3">
+                  Unlock the Full Guide
+                </h3>
+                <p className="text-slate-400 text-center mb-8 text-lg">
+                  Get complete access to production-ready configs, automated protection systems, and real-time monitoring tools.
+                </p>
+
+                {/* Features list */}
+                <div className="grid md:grid-cols-2 gap-3 mb-8">
+                  <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                    <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                    <span className="text-sm text-slate-300">Complete NGINX configs</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                    <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                    <span className="text-sm text-slate-300">Auto-ban watcher script</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                    <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                    <span className="text-sm text-slate-300">Real-time dashboard code</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                    <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                    <span className="text-sm text-slate-300">Advanced techniques</span>
+                  </div>
+                </div>
+
+                {/* Support message */}
+                <div className="bg-linear-to-r from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-xl p-6 mb-6">
+                  <div className="flex items-start gap-4">
+                    <img src="/logo.webp" alt="Burgil's Cat" className="w-16 h-16 rounded-full object-cover border-2 border-blue-500/50 shadow-lg" />
+                    <div className="flex-1">
+                      <h4 className="font-bold text-white mb-1 flex items-center gap-2">
+                        Support Burgil & His Cat 🐱
+                      </h4>
+                      <p className="text-sm text-slate-400 leading-relaxed">
+                        This guide took years to perfect. Help keep the cat fed and more content coming.
+                        <span className="block mt-2 text-blue-400 font-semibold">100% free for now - just unlock to continue!</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Unlock button */}
+                <button
+                  onClick={handleUnlock}
+                  className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <span className="flex items-center justify-center gap-3">
+                    <span className="text-2xl">🚀</span>
+                    <span>Unlock Full Access - $0 Today</span>
+                  </span>
+                </button>
+
+                <p className="text-center text-xs text-slate-500 mt-4">
+                  No payment required • Instant access • Support open-source work
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-slate-800 bg-slate-900 py-12 mt-12">
