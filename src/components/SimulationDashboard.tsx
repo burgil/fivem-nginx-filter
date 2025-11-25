@@ -53,6 +53,8 @@ export const SimulationDashboard: React.FC = () => {
   const [alerts, setAlerts] = useState<string[]>([]);
   const [selectedIp, setSelectedIp] = useState<string | null>(null);
   const [rpsHistory, setRpsHistory] = useState<number[]>(new Array(30).fill(0));
+  const [udpPacketRate, setUdpPacketRate] = useState(0);
+  const [tcpPacketRate, setTcpPacketRate] = useState(0);
   
   // Refs
   const eventIdRef = useRef(0);
@@ -156,6 +158,12 @@ export const SimulationDashboard: React.FC = () => {
         const currentRps = Math.floor(Math.random() * (playerCount + (isAttacking ? 100 : 0))); // Simulated RPS variation
         setStats(prev => ({ ...prev, rps: currentRps }));
         setRpsHistory(prev => [...prev.slice(1), currentRps]);
+        
+        // Simulate UDP/TCP packet rates
+        const baseUdp = playerCount * 20; // Each player generates ~20 UDP packets/sec
+        const baseTcp = playerCount * 2;  // Each player generates ~2 TCP packets/sec
+        setUdpPacketRate(baseUdp + (isAttacking ? Math.floor(Math.random() * 500) : 0));
+        setTcpPacketRate(baseTcp + (isAttacking ? Math.floor(Math.random() * 50) : 0));
       }
 
     }, 200); 
@@ -234,6 +242,16 @@ export const SimulationDashboard: React.FC = () => {
             <div className={`w-3 h-3 rounded-full ${isAttacking ? 'bg-red-500 animate-ping' : 'bg-green-500'}`}></div>
           </div>
           <TrafficGraph data={rpsHistory} color={isAttacking ? '#ef4444' : '#3b82f6'} height={40} />
+          <div className="grid grid-cols-2 gap-2 mt-2 text-[10px]">
+            <div className="bg-black/30 p-1.5 rounded">
+              <div className="text-slate-500">UDP</div>
+              <div className="text-blue-400 font-mono font-bold">{udpPacketRate}/s</div>
+            </div>
+            <div className="bg-black/30 p-1.5 rounded">
+              <div className="text-slate-500">TCP</div>
+              <div className="text-purple-400 font-mono font-bold">{tcpPacketRate}/s</div>
+            </div>
+          </div>
         </div>
 
         {/* Player Controls */}
@@ -265,26 +283,40 @@ export const SimulationDashboard: React.FC = () => {
           <div className="space-y-2">
             <button 
               onClick={toggleAttack}
-              className={`w-full py-3 px-4 rounded-lg font-bold text-sm transition-all shadow-lg ${
+              className={`w-full py-2 px-3 rounded font-bold text-xs transition-all ${
                 isAttacking 
-                  ? 'bg-linear-to-r from-red-600 to-red-700 text-white border-2 border-red-400 animate-pulse shadow-red-500/50' 
-                  : 'bg-linear-to-r from-slate-700 to-slate-800 text-slate-300 border-2 border-slate-600 hover:border-slate-500 hover:from-slate-600 hover:to-slate-700 shadow-slate-900/50'
+                  ? 'bg-red-600 text-white border border-red-400 animate-pulse' 
+                  : 'bg-slate-700 text-slate-300 border border-slate-600 hover:border-slate-500 hover:bg-slate-600'
               }`}
             >
-              {isAttacking ? '🛑 STOP DDoS ATTACK' : '⚔️ START DDoS ATTACK'}
+              {isAttacking ? '🛑 STOP DDoS' : '⚔️ START DDoS'}
             </button>
             <div className="grid grid-cols-2 gap-2">
                 <button 
                 onClick={sendBadPacket}
-                className="w-full py-2.5 px-2 rounded-lg font-bold text-xs bg-linear-to-br from-amber-600/20 to-amber-800/20 text-amber-400 border-2 border-amber-600/50 hover:border-amber-500 hover:bg-amber-600/30 transition-all shadow-md"
+                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/50 hover:border-amber-500 hover:bg-amber-600/30 transition-all"
                 >
-                ⚠️ BAD PACKET
+                ⚠️ BAD HTTP
                 </button>
                 <button 
                 onClick={sendGoodPacket}
-                className="w-full py-2.5 px-2 rounded-lg font-bold text-xs bg-linear-to-br from-green-600/20 to-green-800/20 text-green-400 border-2 border-green-600/50 hover:border-green-500 hover:bg-green-600/30 transition-all shadow-md"
+                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-green-600/20 text-green-400 border border-green-600/50 hover:border-green-500 hover:bg-green-600/30 transition-all"
                 >
-                ✅ GOOD PACKET
+                ✅ GOOD HTTP
+                </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+                <button 
+                onClick={() => { /* Simulate UDP flood */ setUdpPacketRate(prev => prev + 1000); setTimeout(() => setUdpPacketRate(prev => Math.max(0, prev - 1000)), 2000); }}
+                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-blue-600/20 text-blue-400 border border-blue-600/50 hover:border-blue-500 hover:bg-blue-600/30 transition-all"
+                >
+                📡 UDP FLOOD
+                </button>
+                <button 
+                onClick={() => { /* Simulate TCP SYN */ setTcpPacketRate(prev => prev + 500); setTimeout(() => setTcpPacketRate(prev => Math.max(0, prev - 500)), 2000); }}
+                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-purple-600/20 text-purple-400 border border-purple-600/50 hover:border-purple-500 hover:bg-purple-600/30 transition-all"
+                >
+                🔌 TCP SYN
                 </button>
             </div>
           </div>
@@ -322,10 +354,10 @@ export const SimulationDashboard: React.FC = () => {
              <div>BLOCKED: <span className="text-red-400">{stats.blockedRequests}</span></div>
              <div>ALLOWED: <span className="text-green-400">{stats.allowedRequests}</span></div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="text-[10px] text-slate-500 uppercase font-bold">LIVE LOG STREAM</div>
-            <button onClick={clearLogs} className="px-3 py-1 text-[10px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-600 rounded transition-all">CLEAR</button>
-            <button onClick={resetSimulation} className="px-3 py-1 text-[10px] font-bold bg-red-900/30 hover:bg-red-900/50 text-red-400 hover:text-red-300 border border-red-700/50 hover:border-red-600 rounded transition-all">RESET ALL</button>
+            <button onClick={clearLogs} className="px-2 py-0.5 text-[9px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-600 rounded transition-all">CLEAR</button>
+            <button onClick={resetSimulation} className="px-2 py-0.5 text-[9px] font-bold bg-red-900/30 hover:bg-red-900/50 text-red-400 hover:text-red-300 border border-red-700/50 hover:border-red-600 rounded transition-all">RESET</button>
           </div>
         </div>
 
