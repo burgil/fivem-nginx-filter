@@ -105,7 +105,6 @@ export const SimulationDashboard: React.FC = () => {
     let tickCount = 0;
     const interval = setInterval(() => {
       tickCount++;
-      let currentTickRequests = 0;
 
       // 1. Simulate Players (Good Traffic)
       if (playerCount > 0) {
@@ -124,7 +123,6 @@ export const SimulationDashboard: React.FC = () => {
                ua: 'CitizenFX/1.0',
                type: 'good'
              });
-             currentTickRequests++;
            }
         }
       }
@@ -149,7 +147,6 @@ export const SimulationDashboard: React.FC = () => {
              }
           } else {
              addEvent({ ip, status: 502, path: '/wp-login.php', type: 'attack' });
-             currentTickRequests++;
           }
         }
       }
@@ -169,7 +166,29 @@ export const SimulationDashboard: React.FC = () => {
 
   // --- Handlers ---
   const toggleAttack = () => setIsAttacking(!isAttacking);
-  // const clearBans = () => setBannedIps([]);
+  
+  const resetSimulation = () => {
+    setEvents([]);
+    setStats({
+      totalRequests: 0,
+      blockedRequests: 0,
+      allowedRequests: 0,
+      activeConnections: 0,
+      rps: 0,
+    });
+    setBannedIps([]);
+    setAlerts([]);
+    setRpsHistory(new Array(30).fill(0));
+    ipHistoryRef.current = {};
+    setPlayerCount(0);
+    setIsAttacking(false);
+  };
+
+  const clearLogs = () => {
+    setEvents([]);
+    setAlerts([]);
+  };
+
   const banIp = (ip: string) => {
     if (!bannedIps.includes(ip)) {
       setBannedIps([...bannedIps, ip]);
@@ -188,6 +207,17 @@ export const SimulationDashboard: React.FC = () => {
     });
   };
 
+  const sendGoodPacket = () => {
+    addEvent({
+      ip: randomIp(),
+      path: '/players.json',
+      method: 'GET',
+      status: 200,
+      type: 'good',
+      ua: 'CitizenFX/1.0'
+    });
+  };
+
   return (
     <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shadow-2xl my-8 flex flex-col lg:flex-row">
       
@@ -196,7 +226,9 @@ export const SimulationDashboard: React.FC = () => {
         
         {/* Status Card */}
         <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-          <div className="text-xs text-slate-400 uppercase font-bold mb-2">System Status</div>
+          <div className="flex justify-between items-center mb-2">
+             <div className="text-xs text-slate-400 uppercase font-bold">System Status</div>
+          </div>
           <div className="flex justify-between items-end mb-2">
             <span className="text-2xl font-mono text-white">{stats.rps} <span className="text-sm text-slate-500">RPS</span></span>
             <div className={`w-3 h-3 rounded-full ${isAttacking ? 'bg-red-500 animate-ping' : 'bg-green-500'}`}></div>
@@ -210,9 +242,9 @@ export const SimulationDashboard: React.FC = () => {
             Simulate Players
           </label>
           <div className="grid grid-cols-3 gap-2 mb-3">
-            <button onClick={() => setPlayerCount(0)} className={`text-xs py-1 px-2 rounded border ${playerCount === 0 ? 'bg-blue-600 border-blue-500 text-white' : 'border-slate-600 text-slate-400'}`}>0</button>
-            <button onClick={() => setPlayerCount(10)} className={`text-xs py-1 px-2 rounded border ${playerCount === 10 ? 'bg-blue-600 border-blue-500 text-white' : 'border-slate-600 text-slate-400'}`}>10</button>
-            <button onClick={() => setPlayerCount(100)} className={`text-xs py-1 px-2 rounded border ${playerCount === 100 ? 'bg-blue-600 border-blue-500 text-white' : 'border-slate-600 text-slate-400'}`}>100</button>
+            <button onClick={() => setPlayerCount(0)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 0 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>0</button>
+            <button onClick={() => setPlayerCount(10)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 10 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>10</button>
+            <button onClick={() => setPlayerCount(100)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 100 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>100</button>
           </div>
           <input 
             type="range" 
@@ -233,20 +265,28 @@ export const SimulationDashboard: React.FC = () => {
           <div className="space-y-2">
             <button 
               onClick={toggleAttack}
-              className={`w-full py-2 px-4 rounded font-bold text-xs transition-all border ${
+              className={`w-full py-3 px-4 rounded-lg font-bold text-sm transition-all shadow-lg ${
                 isAttacking 
-                  ? 'bg-red-500/20 text-red-400 border-red-500 animate-pulse' 
-                  : 'bg-slate-700 text-slate-300 border-transparent hover:bg-slate-600'
+                  ? 'bg-linear-to-r from-red-600 to-red-700 text-white border-2 border-red-400 animate-pulse shadow-red-500/50' 
+                  : 'bg-linear-to-r from-slate-700 to-slate-800 text-slate-300 border-2 border-slate-600 hover:border-slate-500 hover:from-slate-600 hover:to-slate-700 shadow-slate-900/50'
               }`}
             >
-              {isAttacking ? 'STOP DDoS ATTACK' : 'START DDoS ATTACK'}
+              {isAttacking ? '🛑 STOP DDoS ATTACK' : '⚔️ START DDoS ATTACK'}
             </button>
-            <button 
-              onClick={sendBadPacket}
-              className="w-full py-2 px-4 rounded font-bold text-xs bg-slate-700 text-amber-400 border border-transparent hover:border-amber-400/50 transition-all"
-            >
-              SEND BAD PACKET (Exploit)
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+                <button 
+                onClick={sendBadPacket}
+                className="w-full py-2.5 px-2 rounded-lg font-bold text-xs bg-linear-to-br from-amber-600/20 to-amber-800/20 text-amber-400 border-2 border-amber-600/50 hover:border-amber-500 hover:bg-amber-600/30 transition-all shadow-md"
+                >
+                ⚠️ BAD PACKET
+                </button>
+                <button 
+                onClick={sendGoodPacket}
+                className="w-full py-2.5 px-2 rounded-lg font-bold text-xs bg-linear-to-br from-green-600/20 to-green-800/20 text-green-400 border-2 border-green-600/50 hover:border-green-500 hover:bg-green-600/30 transition-all shadow-md"
+                >
+                ✅ GOOD PACKET
+                </button>
+            </div>
           </div>
         </div>
 
@@ -282,8 +322,10 @@ export const SimulationDashboard: React.FC = () => {
              <div>BLOCKED: <span className="text-red-400">{stats.blockedRequests}</span></div>
              <div>ALLOWED: <span className="text-green-400">{stats.allowedRequests}</span></div>
           </div>
-          <div className="text-[10px] text-slate-500">
-            LIVE LOG STREAM
+          <div className="flex items-center gap-3">
+            <div className="text-[10px] text-slate-500 uppercase font-bold">LIVE LOG STREAM</div>
+            <button onClick={clearLogs} className="px-3 py-1 text-[10px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-600 rounded transition-all">CLEAR</button>
+            <button onClick={resetSimulation} className="px-3 py-1 text-[10px] font-bold bg-red-900/30 hover:bg-red-900/50 text-red-400 hover:text-red-300 border border-red-700/50 hover:border-red-600 rounded transition-all">RESET ALL</button>
           </div>
         </div>
 
