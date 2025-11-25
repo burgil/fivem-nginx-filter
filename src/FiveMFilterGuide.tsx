@@ -1,6 +1,6 @@
 import { SimulationDashboard } from './components/SimulationDashboard';
 import { CodeBlock } from './components/CodeBlock';
-import { Zap, Target, Lock, BarChart3, Rocket, Gamepad2, Shield, AlertTriangle, FileText, CheckCircle, Server, Monitor } from 'lucide-react';
+import { Zap, Target, Lock, BarChart3, Rocket, Gamepad2, Shield, Cat, AlertTriangle, FileText, CheckCircle, Server, Monitor } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 
@@ -1639,10 +1639,10 @@ if ($whitelist = 0) {
                 {/* Support message */}
                 <div className="bg-linear-to-r from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-xl p-6 mb-6">
                   <div className="flex items-start gap-4">
-                    <img src="/logo.webp" alt="Burgil's Cat" className="w-16 h-16 rounded-full object-cover border-2 border-blue-500/50 shadow-lg" />
+                    <img src="/burgil.gif" alt="Burgil's Cat" className="w-16 h-16 rounded-full object-cover border-2 border-blue-500/50 shadow-lg" />
                     <div className="flex-1">
                       <h4 className="font-bold text-white mb-1 flex items-center gap-2">
-                        Support Burgil & His Cat 🐱
+                        Support Burgil & His Cat <Cat className="w-6 h-6 text-gray-600" />
                       </h4>
                       <p className="text-sm text-slate-400 leading-relaxed">
                         This guide took years to perfect. Help keep the cat fed and more content coming.
@@ -1658,7 +1658,7 @@ if ($whitelist = 0) {
                   className="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <span className="flex items-center justify-center gap-3">
-                    <span className="text-2xl">🚀</span>
+                    <Shield className="w-6 h-6" />
                     <span>Unlock Full Access - $0 Today</span>
                   </span>
                 </button>
