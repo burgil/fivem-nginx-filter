@@ -1,12 +1,13 @@
 import { SimulationDashboard } from './components/SimulationDashboard';
 import { CodeBlock } from './components/CodeBlock';
-import { Zap, Target, Lock, BarChart3, Rocket, Gamepad2, Shield, Cat, AlertTriangle, FileText, CheckCircle, Server, Monitor } from 'lucide-react';
+import { Zap, Target, Lock, BarChart3, Rocket, Gamepad2, Shield, Cat, AlertTriangle, FileText, CheckCircle, Server, Monitor, Github, Download } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
 
 export default function FiveMFilterGuide() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [showConversionGuide, setShowConversionGuide] = useState(false);
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -377,7 +378,565 @@ export default function FiveMFilterGuide() {
             </span>
           </div>
           <SimulationDashboard />
+
+          {/* GitHub Download Section */}
+          <div className="mt-8 bg-linear-to-br from-slate-800/50 to-slate-900/50 border border-slate-700 rounded-xl p-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                  <Github className="w-6 h-6 text-slate-400" />
+                  Want This Dashboard Locally?
+                </h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  Download the source code and convert this interactive visualizer into your own secure, authenticated monitoring dashboard.
+                  Run it on your server with real data from your NGINX logs.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href="https://github.com/burgil/fivem-nginx-filter"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-medium transition-all border border-slate-600"
+                  >
+                    <Github className="w-4 h-4" />
+                    View on GitHub
+                  </a>
+                  <a
+                    href="https://github.com/burgil/fivem-nginx-filter/archive/refs/heads/main.zip"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg shadow-blue-500/20"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Source
+                  </a>
+                  <button
+                    onClick={() => setShowConversionGuide(true)}
+                    className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg shadow-purple-500/20"
+                  >
+                    <Rocket className="w-4 h-4" />
+                    Show Me How
+                  </button>
+                </div>
+              </div>
+              <div className="shrink-0">
+                <div className="w-24 h-24 bg-slate-900 rounded-lg border-2 border-slate-700 flex items-center justify-center">
+                  <Github className="w-12 h-12 text-slate-500" />
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
+
+        {/* Conversion Guide Modal */}
+        {showConversionGuide && (
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setShowConversionGuide(false)}>
+            <div className="relative w-full max-w-6xl max-h-[90vh] bg-slate-900 rounded-2xl shadow-2xl shadow-purple-500/20 border border-purple-500/30 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              {/* Header */}
+              <div className="sticky top-0 z-10 bg-linear-to-r from-purple-900 to-blue-900 border-b border-purple-500/30 p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                      <Rocket className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">Convert to Local Dashboard</h2>
+                      <p className="text-sm text-purple-200">Step-by-step guide to run this securely on your server</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowConversionGuide(false)}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="overflow-y-auto max-h-[calc(90vh-100px)] p-6">
+                <section id="local-dashboard" className="scroll-mt-12">
+                  <div className="max-w-4xl mx-auto">
+                    <div className="bg-linear-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-8 mb-8">
+                      <h2 className="text-3xl font-bold text-white mb-4 flex items-center gap-3">
+                        <Server className="w-8 h-8 text-purple-400" />
+                        Convert This to a Secure Local Dashboard
+                      </h2>
+                      <p className="text-slate-300 leading-relaxed mb-4">
+                        This visualizer is currently a <strong>public demo</strong> running on static hosting (Cloudflare Pages).
+                        To use it as a <strong>private monitoring dashboard</strong> for your actual server, you need to:
+                      </p>
+                      <ul className="space-y-2 text-slate-300">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+                          <span>Add authentication (username/password login)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+                          <span>Connect it to your NGINX watcher API (replace simulated data with real logs)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+                          <span>Run it locally on your server (not publicly accessible)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+                          <span>Use HTTPS with proper encryption and secure database for credentials</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* Step-by-Step Guide */}
+                    <div className="space-y-8">
+
+                      {/* Step 1: Install Node.js */}
+                      <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                          <span className="bg-blue-600 text-white font-bold w-8 h-8 flex items-center justify-center rounded-full text-sm">1</span>
+                          Install Node.js on Linux
+                        </h3>
+                        <p className="text-slate-400 mb-4">
+                          Node.js is required to run the development tools and the Express server. Here's how to install it on Ubuntu/Debian:
+                        </p>
+                        <CodeBlock
+                          title="Terminal - Install Node.js 20 LTS"
+                          code={`# Update package list
+sudo apt update
+
+# Install Node.js 20.x (LTS)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install nodejs -y
+
+# Verify installation
+node -v    # Should show v20.x.x
+npm -v     # Should show 10.x.x
+
+# Install pnpm (recommended package manager)
+npm install -g pnpm
+
+# Verify pnpm
+pnpm -v`}
+                        />
+                      </div>
+
+                      {/* Step 2: Download & Build */}
+                      <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                          <span className="bg-blue-600 text-white font-bold w-8 h-8 flex items-center justify-center rounded-full text-sm">2</span>
+                          Download & Build the Dashboard
+                        </h3>
+                        <CodeBlock
+                          title="Terminal - Setup Project"
+                          code={`# Clone the repository
+git clone https://github.com/burgil/fivem-nginx-filter.git
+cd fivem-nginx-filter
+
+# Install dependencies
+pnpm install
+
+# Build the project
+pnpm build
+
+# The output will be in the 'dist' folder
+ls -la dist/`}
+                        />
+                      </div>
+
+                      {/* Step 3: Serve with Express */}
+                      <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                          <span className="bg-blue-600 text-white font-bold w-8 h-8 flex items-center justify-center rounded-full text-sm">3</span>
+                          Create Express Server with Authentication
+                        </h3>
+                        <p className="text-slate-400 mb-4">
+                          Create a simple Express server to serve the built files and add basic authentication:
+                        </p>
+                        <CodeBlock
+                          title="server.js (create in project root)"
+                          code={`const express = require('express');
+const path = require('path');
+const bcrypt = require('bcrypt');
+const session = require('express-session');
+const Database = require('better-sqlite3');
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Initialize SQLite database for users
+const db = new Database('dashboard.db');
+
+// Create users table
+db.exec(\`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+\`);
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: 'CHANGE_THIS_TO_A_RANDOM_SECRET',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // Set to true if using HTTPS
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Authentication middleware
+const requireAuth = (req, res, next) => {
+  if (req.session && req.session.userId) {
+    return next();
+  }
+  res.status(401).json({ error: 'Unauthorized' });
+};
+
+// Login endpoint
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  
+  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+  
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  
+  const validPassword = await bcrypt.compare(password, user.password_hash);
+  if (!validPassword) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  
+  req.session.userId = user.id;
+  req.session.username = user.username;
+  res.json({ success: true, username: user.username });
+});
+
+// Logout endpoint
+app.post('/api/logout', (req, res) => {
+  req.session.destroy();
+  res.json({ success: true });
+});
+
+// Check auth status
+app.get('/api/auth/status', (req, res) => {
+  if (req.session && req.session.userId) {
+    res.json({ authenticated: true, username: req.session.username });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+// Proxy to watcher API (only for authenticated users)
+app.get('/api/stats', requireAuth, async (req, res) => {
+  try {
+    const response = await fetch('http://localhost:3000/stats');
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+// Serve static files from dist folder (only for authenticated users)
+app.use(express.static(path.join(__dirname, 'dist'), {
+  setHeaders: (res, filePath) => {
+    // Add security headers
+    res.set('X-Content-Type-Options', 'nosniff');
+    res.set('X-Frame-Options', 'DENY');
+    res.set('X-XSS-Protection', '1; mode=block');
+  }
+}));
+
+// All routes serve index.html (SPA)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(\`Dashboard server running on http://127.0.0.1:\${PORT}\`);
+  console.log(\`⚠️  Only accessible from localhost for security\`);
+});
+
+// Create initial admin user (run once)
+async function createAdminUser(username, password) {
+  const passwordHash = await bcrypt.hash(password, 10);
+  try {
+    db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run(username, passwordHash);
+    console.log(\`Admin user '\${username}' created successfully\`);
+  } catch (err) {
+    console.log('Admin user already exists');
+  }
+}
+
+// Uncomment and run once to create admin user:
+// createAdminUser('admin', 'CHANGE_THIS_PASSWORD');`}
+                        />
+                        <CodeBlock
+                          title="Terminal - Install Express Dependencies"
+                          code={`# Install required packages
+pnpm add express express-session bcrypt better-sqlite3
+
+# Or with npm:
+# npm install express express-session bcrypt better-sqlite3`}
+                        />
+                      </div>
+
+                      {/* Step 4: Security Best Practices */}
+                      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                          <Shield className="w-6 h-6 text-red-400" />
+                          Security & Encryption Standards
+                        </h3>
+                        <div className="space-y-4 text-slate-300">
+                          <div>
+                            <h4 className="font-bold text-white mb-2">🔐 Password Encryption</h4>
+                            <p className="text-sm text-slate-400">
+                              We use <strong>bcrypt</strong> with 10 rounds (cost factor) to hash passwords. This is industry-standard and protects against rainbow table attacks.
+                              Never store plain-text passwords in your database.
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white mb-2">🗄️ Database: SQLite3</h4>
+                            <p className="text-sm text-slate-400">
+                              <strong>better-sqlite3</strong> is a simple, fast, embedded database. No separate server needed.
+                              Perfect for single-server deployments. The database file (<code>dashboard.db</code>) stores hashed credentials.
+                            </p>
+                            <CodeBlock
+                              title="Secure Your Database File"
+                              code={`# Set proper permissions (only owner can read/write)
+chmod 600 dashboard.db
+
+# Backup regularly
+cp dashboard.db dashboard.db.backup`}
+                            />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white mb-2">🌐 Network Security</h4>
+                            <ul className="text-sm text-slate-400 space-y-1 list-disc list-inside">
+                              <li><strong>Bind to localhost only:</strong> The server listens on <code>127.0.0.1</code>, not <code>0.0.0.0</code></li>
+                              <li><strong>Use SSH tunnel:</strong> Access via <code>ssh -L 3001:127.0.0.1:3001 user@server</code></li>
+                              <li><strong>Or use reverse proxy:</strong> Put behind NGINX with SSL (Let's Encrypt) and IP whitelist</li>
+                              <li><strong>Never expose directly to internet</strong> without HTTPS and rate limiting</li>
+                            </ul>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white mb-2">🔒 Additional Security Measures</h4>
+                            <CodeBlock
+                              title="Firewall Configuration"
+                              code={`# Block external access to dashboard port
+sudo ufw deny 3001/tcp
+
+# Dashboard is only accessible via:
+# 1. SSH tunnel from your local machine
+# 2. Or NGINX reverse proxy with authentication`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Step 5: Running the Dashboard */}
+                      <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                          <span className="bg-blue-600 text-white font-bold w-8 h-8 flex items-center justify-center rounded-full text-sm">4</span>
+                          Run the Dashboard
+                        </h3>
+                        <CodeBlock
+                          title="Terminal - Start Server"
+                          code={`# Start the server
+node server.js
+
+# Or use PM2 for production (auto-restart)
+npm install -g pm2
+pm2 start server.js --name "fivem-dashboard"
+pm2 save
+pm2 startup`}
+                        />
+                        <div className="mt-4 bg-blue-900/20 border border-blue-500/30 rounded p-4">
+                          <h4 className="font-bold text-white mb-2">Access via SSH Tunnel</h4>
+                          <CodeBlock
+                            title="From Your Local Machine"
+                            code={`# Create SSH tunnel
+ssh -L 3001:127.0.0.1:3001 user@your-server-ip
+
+# Then open in browser:
+# http://localhost:3001
+
+# Login with credentials you created`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* AI Prompt for Conversion */}
+                      <div className="bg-linear-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/40 rounded-lg p-6">
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                          <Rocket className="w-6 h-6 text-purple-400" />
+                          AI Prompt: Convert This Project Automatically
+                        </h3>
+                        <p className="text-slate-300 mb-4">
+                          Copy this prompt to ChatGPT, Claude, or your favorite AI assistant to help convert this project:
+                        </p>
+                        <div className="bg-black/40 border border-slate-700 rounded-lg p-4 relative">
+                          <pre id="ai-prompt" className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed overflow-x-auto">
+                            {`I have a React + Vite dashboard project (source: https://github.com/burgil/fivem-nginx-filter) that currently displays simulated DDoS filtering data. I need to convert it to a secure, authenticated local monitoring dashboard. Please help me:
+
+1. **Add Authentication System:**
+   - Create a login page with username/password
+   - Use Express.js with express-session for session management
+   - Store hashed passwords (bcrypt) in SQLite3 database (better-sqlite3)
+   - Protect all routes except /login with authentication middleware
+   - Add logout functionality
+
+2. **Connect to Real Data:**
+   - Replace simulated data in SimulationDashboard component with real API calls
+   - Fetch data from http://localhost:3000/stats (NGINX watcher API)
+   - Update graphs to display: real RPS, blocked requests, top IPs, banned IPs
+   - Add error handling for API failures
+
+3. **Security Hardening:**
+   - Server should bind to 127.0.0.1 only (not 0.0.0.0)
+   - Add security headers (X-Frame-Options, CSP, X-Content-Type-Options)
+   - Implement rate limiting on login endpoint (max 5 attempts per minute)
+   - Add CSRF protection with tokens
+   - Use httpOnly, secure cookies for sessions
+
+4. **Production Setup:**
+   - Create systemd service file for auto-start
+   - Add environment variables for sensitive config (session secret, db path)
+   - Setup PM2 for process management
+   - Add logging (winston) for security events
+
+5. **Database Schema:**
+\`\`\`sql
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_login DATETIME
+);
+
+CREATE TABLE login_attempts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL,
+  ip_address TEXT,
+  success BOOLEAN,
+  attempted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+\`\`\`
+
+6. **Documentation:**
+   - Update README.md with installation steps
+   - Add instructions for creating admin user
+   - Document SSH tunnel access method
+   - Add security best practices section
+
+Please provide complete code for server.js, updated App.tsx with login logic, and all necessary configuration files.`}
+                          </pre>
+                          <button
+                            onClick={(e) => {
+                              const promptElement = document.getElementById('ai-prompt');
+                              if (promptElement && promptElement.textContent) {
+                                navigator.clipboard.writeText(promptElement.textContent).then(() => {
+                                  const btn = e.currentTarget;
+                                  const originalText = btn.textContent;
+                                  btn.textContent = 'Copied!';
+                                  setTimeout(() => {
+                                    btn.textContent = originalText;
+                                  }, 2000);
+                                }).catch(err => {
+                                  console.error('Failed to copy:', err);
+                                  alert('Failed to copy. Please select and copy manually.');
+                                });
+                              }
+                            }}
+                            className="absolute top-2 right-2 bg-purple-600 hover:bg-purple-500 text-white px-3 py-1 rounded text-xs font-bold transition-all"
+                          >
+                            Copy Prompt
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Architecture Diagram */}
+                      <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
+                        <h3 className="text-xl font-bold text-white mb-4">Final Architecture</h3>
+                        <div className="bg-black p-6 rounded-lg border border-slate-800 font-mono text-xs overflow-x-auto">
+                          <pre className="text-slate-300">{`
+┌─────────────────────────────────────────────┐
+│  YOUR LOCAL MACHINE                         │
+│  Browser: http://localhost:3001             │
+│  (SSH Tunnel)                               │
+└──────────────┬──────────────────────────────┘
+               │ SSH Tunnel
+               │ ssh -L 3001:127.0.0.1:3001
+               ▼
+┌─────────────────────────────────────────────┐
+│  SERVER (127.0.0.1:3001)                    │
+│  ┌─────────────────────────────────────┐   │
+│  │ Express.js Server                   │   │
+│  │ • Serves /dist (built React app)    │   │
+│  │ • POST /api/login (authentication)  │   │
+│  │ • GET /api/stats (proxies to 3000) │   │
+│  │ • Session management (express-sess) │   │
+│  └──────────┬──────────────────────────┘   │
+│             │                               │
+│             ▼                               │
+│  ┌─────────────────────┐                   │
+│  │ dashboard.db        │                   │
+│  │ (SQLite3)           │                   │
+│  │ • users table       │                   │
+│  │ • login_attempts    │                   │
+│  └─────────────────────┘                   │
+└──────────────┬──────────────────────────────┘
+               │
+               │ Internal API Call (localhost:3000)
+               ▼
+┌─────────────────────────────────────────────┐
+│  NGINX WATCHER (localhost:3000)             │
+│  • Tails /var/log/nginx/fivem_access.log   │
+│  • Provides /stats, /banned endpoints       │
+│  • Auto-bans via iptables                   │
+└─────────────────────────────────────────────┘
+`}</pre>
+                        </div>
+                      </div>
+
+                      {/* Quick Reference */}
+                      <div className="bg-linear-to-r from-green-900/20 to-blue-900/20 border border-green-500/30 rounded-lg p-6">
+                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                          <CheckCircle className="w-5 h-5 text-green-400" />
+                          Quick Reference: Key Commands
+                        </h3>
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <h4 className="font-bold text-white mb-2">Setup</h4>
+                            <code className="block bg-black/50 p-2 rounded text-xs text-green-400">pnpm install && pnpm build</code>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white mb-2">Run Server</h4>
+                            <code className="block bg-black/50 p-2 rounded text-xs text-green-400">node server.js</code>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white mb-2">Create User</h4>
+                            <code className="block bg-black/50 p-2 rounded text-xs text-green-400">// Uncomment in server.js</code>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white mb-2">SSH Tunnel</h4>
+                            <code className="block bg-black/50 p-2 rounded text-xs text-green-400">ssh -L 3001:127.0.0.1:3001 user@ip</code>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Seperator */}
         <div className="my-12 flex items-center justify-center" aria-hidden>
