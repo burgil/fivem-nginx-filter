@@ -372,8 +372,8 @@ export default function FiveMFilterGuide() {
                 Visualize how the filter handles traffic. Simulate attacks, manage whitelists, and see the "Watcher" logic in action.
               </p>
             </div>
-            <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold border border-blue-500/20 animate-pulse">
-              LIVE ENVIRONMENT
+            <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold border border-blue-500/20">
+              SIMULATED DEMO
             </span>
           </div>
           <SimulationDashboard />
