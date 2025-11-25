@@ -428,9 +428,9 @@ export default function FiveMFilterGuide() {
                   <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Critical: Don't Use Adjacent Public IPs</h4>
                   <p className="text-sm text-slate-400">
                     <strong>Do NOT</strong> use consecutive public IPs for both servers. If your proxy is <code>1.2.3.4</code>,
-                    don't make your game server <code>1.2.3.5</code> – attackers will scan adjacent IPs and find it.
+                    don't make your game server <code>1.2.3.5</code> - attackers will scan adjacent IPs and find it.<br />
                     <strong>Best practice:</strong> Use a completely different IP range for your game server, or use private IPs (10.x.x.x) if both servers are in the same datacenter.
-                    Most providers offer private networking (OVH vRack, Hetzner Cloud Networks, AWS VPC) where servers communicate via internal IPs.
+                    Most providers offer private networking where servers communicate via internal IPs.
                   </p>
                 </div>
               </div>
@@ -759,7 +759,7 @@ set onesync on`}
               <div className="mt-6 bg-slate-800/50 p-5 rounded-lg border border-slate-700">
                 <h4 className="font-bold text-white mb-3">Windows Firewall Rules (Optional but Recommended)</h4>
                 <p className="text-sm text-slate-400 mb-3">
-                  On your Windows server, restrict <strong>port 30120</strong> to only accept connections from the proxy IP (10.0.0.1). 
+                  On your Windows server, restrict <strong>port 30120</strong> to only accept connections from the proxy IP (10.0.0.1).
                   This doesn't affect other services - Windows can still access the internet, receive RDP connections, etc.
                 </p>
                 <CodeBlock
