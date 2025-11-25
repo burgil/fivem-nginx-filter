@@ -328,10 +328,26 @@ export const SimulationDashboard: React.FC = () => {
   };
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shadow-2xl my-8 flex flex-col lg:flex-row">
+    <div className="space-y-4 my-8">
+      {/* Warning Disclaimer */}
+      <div className="bg-amber-900/20 border border-amber-700/50 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl">⚠️</div>
+          <div>
+            <h3 className="text-amber-400 font-bold mb-1">Educational Client-Sided Simulation Only</h3>
+            <p className="text-sm text-slate-300">
+              This is a client-side visualization to demonstrate how firewall rules work. 
+              No actual traffic is generated. Real DDoS mitigation requires server-side configuration 
+              with iptables, fail2ban, and proper nginx/CloudFlare settings.
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Left Sidebar: Controls */}
-      <div className="w-full lg:w-80 bg-slate-800/50 border-r border-slate-700 p-6 flex flex-col gap-6">
+      <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shadow-2xl flex flex-col lg:flex-row">
+
+        {/* Left Sidebar: Controls */}
+        <div className="w-full lg:w-80 bg-slate-800/50 border-r border-slate-700 p-6 flex flex-col gap-6">
 
         {/* Status Card */}
         <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
@@ -723,6 +739,7 @@ export const SimulationDashboard: React.FC = () => {
           bannedIpsCount={bannedIps.length}
         />
       </div>
+    </div>
     </div>
   );
 };
