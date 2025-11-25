@@ -334,11 +334,11 @@ export const SimulationDashboard: React.FC = () => {
         <div className="flex items-start gap-3">
           <div className="text-2xl">⚠️</div>
           <div>
-            <h3 className="text-amber-400 font-bold mb-1">Educational Client-Sided Simulation Only</h3>
+            <h3 className="text-amber-400 font-bold mb-1">100% Offline Browser Simulation</h3>
             <p className="text-sm text-slate-300">
-              This is a client-side visualization to demonstrate how firewall rules work. 
-              No actual traffic is generated. Real DDoS mitigation requires server-side configuration 
-              with iptables, fail2ban, and proper nginx/CloudFlare settings.
+              This simulation runs entirely in your browser with <strong className="text-amber-300">zero network activity</strong>. 
+              No real traffic is sent or received — it's a visual demonstration of firewall concepts. 
+              Real DDoS protection requires actual server-side tools like iptables, fail2ban, nginx rate limiting, and CloudFlare.
             </p>
           </div>
         </div>
