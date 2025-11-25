@@ -1145,13 +1145,78 @@ sudo /opt/fivem-watcher/analyze.sh > /tmp/attack_report_$(date +%Y%m%d_%H%M%S).t
 
               <div className="space-y-8">
 
+                {/* Cloudflare Proxy */}
+                <div className="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
+                  <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                    <span>☁️</span> Cloudflare Proxy (Alternative/Additional Layer)
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    Add Cloudflare as an additional proxy layer for HTTPS traffic and DDoS protection. 
+                    <strong className="text-blue-400"> Note: UDP traffic requires Cloudflare Spectrum (paid add-on).</strong>
+                  </p>
+
+                  <div className="bg-blue-900/10 border border-blue-500/30 p-4 rounded mb-4">
+                    <h4 className="font-bold text-white mb-2">Setup Steps:</h4>
+                    <ol className="text-sm text-slate-300 space-y-2 list-decimal list-inside">
+                      <li>Add your domain to Cloudflare and point DNS to your NGINX proxy IP</li>
+                      <li>Enable the orange cloud (proxy) on your DNS record for <code>play.yourserver.com</code></li>
+                      <li>Configure SSL/TLS mode to "Full (strict)" and get Cloudflare Origin Certificate</li>
+                      <li><strong>For UDP:</strong> Purchase Cloudflare Spectrum and create an application for port 30120 UDP</li>
+                    </ol>
+                  </div>
+
+                  <CodeBlock
+                    title="NGINX - Install Cloudflare Origin Certificate"
+                    code={`# Download your Cloudflare Origin Certificate from CF Dashboard
+# Save as /etc/ssl/cloudflare-origin.pem (certificate)
+# Save as /etc/ssl/cloudflare-origin-key.pem (private key)
+
+# Update your nginx config to use it:
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name play.yourserver.com;
+
+    ssl_certificate /etc/ssl/cloudflare-origin.pem;
+    ssl_certificate_key /etc/ssl/cloudflare-origin-key.pem;
+    
+    # Rest of your config...
+}`}
+                  />
+
+                  <CodeBlock
+                    title="server.cfg - Configure Cloudflare IP Ranges"
+                    code={`# Cloudflare IPv4 ranges (trust X-Real-IP from these)
+set sv_proxyIPRanges "173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22"
+
+# Use your Cloudflare domain
+set sv_forceIndirectListing true
+set sv_listingHostOverride "play.yourserver.com"
+set sv_endpointprivacy true`}
+                  />
+
+                  <div className="bg-amber-900/10 border border-amber-500/30 p-3 rounded mt-4">
+                    <p className="text-xs text-amber-300">
+                      <strong>⚠️ Important:</strong> Cloudflare free plan only proxies HTTP/HTTPS traffic. 
+                      UDP traffic (game data) requires <strong>Cloudflare Spectrum</strong> ($5+/month). 
+                      Without Spectrum, UDP goes direct to your server IP, so you still need firewall rules.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-900/50 p-3 rounded mt-4">
+                    <p className="text-xs text-slate-400">
+                      <strong>Updated IP ranges:</strong> Always check <a href="https://www.cloudflare.com/ips/" target="_blank" rel="noopener" className="text-blue-400 hover:underline">cloudflare.com/ips</a> for the latest IP ranges.
+                    </p>
+                  </div>
+                </div>
+
                 {/* SSL/TLS */}
                 <div className="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
                   <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-                    <span>🔐</span> Add SSL/TLS (HTTPS)
+                    <span>🔐</span> Add SSL/TLS (HTTPS) with Let's Encrypt
                   </h3>
                   <p className="text-sm text-slate-400 mb-3">
-                    Use Let's Encrypt to secure your HTTP endpoints:
+                    Use Let's Encrypt for free SSL certificates (alternative to Cloudflare):
                   </p>
                   <CodeBlock
                     title="Terminal"
