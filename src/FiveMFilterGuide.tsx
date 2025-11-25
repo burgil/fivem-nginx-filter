@@ -1,5 +1,6 @@
 import { SimulationDashboard } from './components/SimulationDashboard';
 import { CodeBlock } from './components/CodeBlock';
+import { Zap, Target, Lock, BarChart3, Rocket, Gamepad2, Shield, AlertTriangle, FileText, CheckCircle, Server, Monitor } from 'lucide-react';
 
 export default function FiveMFilterGuide() {
   const scrollToSection = (id: string) => {
@@ -55,7 +56,7 @@ export default function FiveMFilterGuide() {
           <div className="grid md:grid-cols-3 gap-4 mb-8 text-left">
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
               <div className="text-blue-400 font-bold mb-2 flex items-center gap-2">
-                <span>⚡</span> Crash Prevention
+                <Zap className="w-4 h-4" /> Crash Prevention
               </div>
               <p className="text-xs text-slate-400">
                 Stop HTTP floods, UDP packet storms, and SYN attacks <strong>before</strong> they reach FXServer.
@@ -64,7 +65,7 @@ export default function FiveMFilterGuide() {
             </div>
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
               <div className="text-purple-400 font-bold mb-2 flex items-center gap-2">
-                <span>🎯</span> Smart Rate Limiting
+                <Target className="w-4 h-4" /> Smart Rate Limiting
               </div>
               <p className="text-xs text-slate-400">
                 Token-bucket algorithm with configurable limits per second/minute/burst.
@@ -73,7 +74,7 @@ export default function FiveMFilterGuide() {
             </div>
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
               <div className="text-green-400 font-bold mb-2 flex items-center gap-2">
-                <span>🔒</span> Auto-Ban & Whitelist
+                <Lock className="w-4 h-4" /> Auto-Ban & Whitelist
               </div>
               <p className="text-xs text-slate-400">
                 Node.js watcher auto-bans IPs via <code>iptables</code> based on attack patterns.
@@ -82,7 +83,7 @@ export default function FiveMFilterGuide() {
             </div>
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
               <div className="text-amber-400 font-bold mb-2 flex items-center gap-2">
-                <span>📊</span> Real-Time Monitoring
+                <BarChart3 className="w-4 h-4" /> Real-Time Monitoring
               </div>
               <p className="text-xs text-slate-400">
                 Live RPS graphs, attack distribution charts, banned IP lists.
@@ -91,7 +92,7 @@ export default function FiveMFilterGuide() {
             </div>
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
               <div className="text-red-400 font-bold mb-2 flex items-center gap-2">
-                <span>🚀</span> Layer 4 + Layer 7
+                <Rocket className="w-4 h-4" /> Layer 4 + Layer 7
               </div>
               <p className="text-xs text-slate-400">
                 HTTP proxy <strong>and</strong> UDP stream proxy.
@@ -100,7 +101,7 @@ export default function FiveMFilterGuide() {
             </div>
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
               <div className="text-cyan-400 font-bold mb-2 flex items-center gap-2">
-                <span>🎮</span> DDoS Simulation
+                <Gamepad2 className="w-4 h-4" /> DDoS Simulation
               </div>
               <p className="text-xs text-slate-400">
                 Interactive dashboard lets you test UDP floods, TCP SYN attacks, HTTP spam.
@@ -129,7 +130,7 @@ export default function FiveMFilterGuide() {
 
         {/* Disclaimer */}
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-12 flex gap-4 items-start max-w-4xl mx-auto">
-          <div className="text-2xl">🛡️</div>
+          <Shield className="w-8 h-8 text-red-400 shrink-0" />
           <div>
             <h3 className="font-bold text-red-400">Security Disclaimer</h3>
             <p className="text-sm text-red-200/70 mt-1">
@@ -149,7 +150,7 @@ export default function FiveMFilterGuide() {
       ======================================== */}
             <section className="bg-slate-800/30 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                <span className="text-blue-500">📋</span> Table of Contents
+                <FileText className="w-6 h-6 text-blue-500" /> Table of Contents
               </h2>
               <div className="grid md:grid-cols-2 gap-x-8 gap-y-2">
                 <a href="#intro" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
@@ -236,7 +237,7 @@ export default function FiveMFilterGuide() {
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
                   <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
                     <div className="text-blue-400 font-bold mb-2 flex items-center gap-2">
-                      <span>🛡️</span> Layer 7 (HTTP) Filtering
+                      <Shield className="w-4 h-4" /> Layer 7 (HTTP) Filtering
                     </div>
                     <p className="text-xs text-slate-400">
                       Inspect HTTP headers, User-Agents, request paths, query strings. Use <code>map</code> directives to blacklist/whitelist patterns.
@@ -246,7 +247,7 @@ export default function FiveMFilterGuide() {
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
                     <div className="text-purple-400 font-bold mb-2 flex items-center gap-2">
-                      <span>⚡</span> Token Bucket Rate Limiting
+                      <Zap className="w-4 h-4" /> Token Bucket Rate Limiting
                     </div>
                     <p className="text-xs text-slate-400">
                       Use <code>limit_req_zone</code> with burst buffers to enforce per-IP limits. Example: 5 req/s for <code>/info.json</code>, 10 req/s globally.
@@ -255,7 +256,7 @@ export default function FiveMFilterGuide() {
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
                     <div className="text-green-400 font-bold mb-2 flex items-center gap-2">
-                      <span>🔒</span> Network Isolation (Different Subnet)
+                      <Lock className="w-4 h-4" /> Network Isolation (Different Subnet)
                     </div>
                     <p className="text-xs text-slate-400">
                       Your Windows server lives on a <strong>private subnet</strong> (10.0.0.0/24). The proxy has dual interfaces: one public (1.2.3.4), one private (10.0.0.1).
@@ -264,7 +265,7 @@ export default function FiveMFilterGuide() {
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
                     <div className="text-amber-400 font-bold mb-2 flex items-center gap-2">
-                      <span>📊</span> Real-Time Monitoring & Auto-Ban
+                      <BarChart3 className="w-4 h-4" /> Real-Time Monitoring & Auto-Ban
                     </div>
                     <p className="text-xs text-slate-400">
                       A Node.js "Watcher" tails NGINX access logs, detects attack patterns (e.g., {'>'}100 requests with {'>'}70% blocked), and auto-bans via <code>iptables</code>.
@@ -292,25 +293,25 @@ export default function FiveMFilterGuide() {
                 <h4 className="font-bold text-white mb-3">Key Benefits of This Architecture</h4>
                 <ul className="space-y-3 text-sm text-slate-300">
                   <li className="flex items-start gap-3">
-                    <span className="text-green-500 font-bold">✓</span>
+                    <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                     <div>
                       <strong>Reduces FiveM Server Load:</strong> FXServer no longer handles malicious requests. `sv_requestParanoia` becomes a fallback, not the primary defense.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-green-500 font-bold">✓</span>
+                    <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                     <div>
                       <strong>Prevents IP Leakage:</strong> By using a private subnet, attackers can't discover your game server's real IP.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-green-500 font-bold">✓</span>
+                    <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                     <div>
                       <strong>Scalable:</strong> Want to add another game server? Just add it to the NGINX `upstream` block. The proxy distributes traffic.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-green-500 font-bold">✓</span>
+                    <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                     <div>
                       <strong>Observable:</strong> Centralized logs make it easy to analyze attacks, build graphs, and improve your filtering rules over time.
                     </div>
@@ -369,7 +370,7 @@ export default function FiveMFilterGuide() {
                 <h3 className="text-xl font-bold text-white mb-4">What You Need</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-slate-800/50 p-5 rounded-lg border border-slate-700">
-                    <h4 className="font-bold text-blue-400 mb-2">🐧 Linux Proxy Server</h4>
+                    <h4 className="font-bold text-blue-400 mb-2 flex items-center gap-2"><Server className="w-4 h-4" /> Linux Proxy Server</h4>
                     <ul className="text-sm text-slate-400 space-y-1">
                       <li>• <strong>OS:</strong> Ubuntu 22.04 LTS (recommended)</li>
                       <li>• <strong>CPU:</strong> 2+ cores</li>
@@ -379,7 +380,7 @@ export default function FiveMFilterGuide() {
                     </ul>
                   </div>
                   <div className="bg-slate-800/50 p-5 rounded-lg border border-slate-700">
-                    <h4 className="font-bold text-purple-400 mb-2">🎮 Windows Game Server</h4>
+                    <h4 className="font-bold text-purple-400 mb-2 flex items-center gap-2"><Monitor className="w-4 h-4" /> Windows Game Server</h4>
                     <ul className="text-sm text-slate-400 space-y-1">
                       <li>• <strong>OS:</strong> Windows Server 2019/2022</li>
                       <li>• <strong>FiveM:</strong> Latest artifacts</li>
@@ -424,7 +425,7 @@ export default function FiveMFilterGuide() {
             `}</pre>
                 </div>
                 <div className="bg-amber-900/10 border border-amber-500/30 p-4 rounded-lg mt-4">
-                  <h4 className="font-bold text-amber-400 mb-2">⚠️ Critical: Use Different Subnets</h4>
+                  <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Critical: Use Different Subnets</h4>
                   <p className="text-sm text-slate-400">
                     <strong>Do NOT</strong> put both servers on the same public subnet. If your proxy is <code>1.2.3.4</code>,
                     don't make your game server <code>1.2.3.5</code> – attackers will scan adjacent IPs.
@@ -492,7 +493,7 @@ sudo systemctl start nginx`}
 
               <div className="bg-blue-900/10 border border-blue-500/30 p-4 rounded-lg mt-6">
                 <p className="text-sm text-blue-300">
-                  <strong>✓ Checkpoint:</strong> Visit <code>http://YOUR_PUBLIC_IP</code> in a browser.
+                  <strong className="flex items-center gap-1"><CheckCircle className="w-3 h-3 inline" /> Checkpoint:</strong> Visit <code>http://YOUR_PUBLIC_IP</code> in a browser.
                   You should see the default NGINX welcome page.
                 </p>
               </div>
@@ -630,7 +631,7 @@ server {
                   </ul>
                 </div>
                 <div className="bg-amber-900/10 border border-amber-500/30 p-4 rounded-lg">
-                  <h4 className="font-bold text-amber-400 mb-2">⚠️ Testing Tip</h4>
+                  <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Testing Tip</h4>
                   <p className="text-sm text-slate-400">
                     After creating this file, test the config with: <code className="text-white">sudo nginx -t</code>
                     <br />Then reload: <code className="text-white">sudo systemctl reload nginx</code>
@@ -687,7 +688,7 @@ stream {
               />
 
               <div className="bg-green-900/10 border border-green-500/30 p-4 rounded-lg mt-6">
-                <h4 className="font-bold text-green-400 mb-2">✓ Why Both TCP and UDP?</h4>
+                <h4 className="font-bold text-green-400 mb-2 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Why Both TCP and UDP?</h4>
                 <p className="text-sm text-slate-400">
                   FiveM uses <strong>TCP for initial connection negotiation</strong> and <strong>UDP for game data</strong>.
                   You need both proxy blocks to ensure players can connect and play.
@@ -1025,7 +1026,7 @@ sudo journalctl -u fivem-watcher -f`}
 
                 {/* API Usage */}
                 <div className="bg-green-900/10 border border-green-500/30 p-5 rounded-lg">
-                  <h4 className="font-bold text-green-400 mb-3">📊 Using the API</h4>
+                  <h4 className="font-bold text-green-400 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Using the API</h4>
                   <p className="text-sm text-slate-400 mb-3">
                     You can now query the watcher from any tool:
                   </p>
@@ -1457,15 +1458,15 @@ if ($whitelist = 0) {
               </p>
               <div className="grid md:grid-cols-3 gap-4 text-sm">
                 <div className="bg-slate-900/50 p-4 rounded">
-                  <div className="font-bold text-green-400 mb-1">✓ Layer 7 Filtering</div>
+                  <div className="font-bold text-green-400 mb-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Layer 7 Filtering</div>
                   <div className="text-slate-400">Block bad requests by content</div>
                 </div>
                 <div className="bg-slate-900/50 p-4 rounded">
-                  <div className="font-bold text-blue-400 mb-1">✓ Auto-Ban System</div>
+                  <div className="font-bold text-blue-400 mb-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Auto-Ban System</div>
                   <div className="text-slate-400">Watcher handles attacks automatically</div>
                 </div>
                 <div className="bg-slate-900/50 p-4 rounded">
-                  <div className="font-bold text-purple-400 mb-1">✓ Observable</div>
+                  <div className="font-bold text-purple-400 mb-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Observable</div>
                   <div className="text-slate-400">Logs, APIs, and dashboards</div>
                 </div>
               </div>
@@ -1496,3 +1497,4 @@ if ($whitelist = 0) {
     </div>
   );
 }
+

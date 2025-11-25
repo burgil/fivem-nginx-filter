@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Line, Doughnut } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
+import { BarChart3 } from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,7 +10,6 @@ import {
   Title,
   Tooltip,
   Legend,
-  ArcElement,
 } from 'chart.js';
 
 ChartJS.register(
@@ -19,12 +19,13 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  ArcElement
+  Legend
 );
 
 interface LiveGraphsProps {
   rpsHistory: number[];
+  udpHistory: number[];
+  tcpHistory: number[];
   totalRequests: number;
   blockedRequests: number;
   allowedRequests: number;
@@ -33,6 +34,8 @@ interface LiveGraphsProps {
 
 export const LiveGraphs: React.FC<LiveGraphsProps> = ({
   rpsHistory,
+  udpHistory,
+  tcpHistory,
   totalRequests,
   blockedRequests,
   allowedRequests,
@@ -52,23 +55,27 @@ export const LiveGraphs: React.FC<LiveGraphsProps> = ({
     ],
   }), [rpsHistory]);
 
-  const statusChartData = useMemo(() => ({
-    labels: ['Allowed (200)', 'Blocked (4xx/5xx)'],
+  const packetChartData = useMemo(() => ({
+    labels: Array.from({ length: 30 }, (_, i) => `${i}s`),
     datasets: [
       {
-        data: [allowedRequests, blockedRequests],
-        backgroundColor: [
-          'rgba(34, 197, 94, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-        ],
-        borderColor: [
-          'rgb(34, 197, 94)',
-          'rgb(239, 68, 68)',
-        ],
-        borderWidth: 1,
+        label: 'UDP Packets/s',
+        data: udpHistory,
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+      {
+        label: 'TCP Packets/s',
+        data: tcpHistory,
+        borderColor: 'rgb(168, 85, 247)',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        tension: 0.4,
+        fill: true,
       },
     ],
-  }), [allowedRequests, blockedRequests]);
+  }), [udpHistory, tcpHistory]);
 
   const chartOptions = {
     responsive: true,
@@ -112,41 +119,18 @@ export const LiveGraphs: React.FC<LiveGraphsProps> = ({
     },
   };
 
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: 'bottom' as const,
-        labels: {
-          color: '#cbd5e1',
-          font: {
-            size: 10,
-          },
-        },
-      },
-      tooltip: {
-        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-        titleColor: '#fff',
-        bodyColor: '#cbd5e1',
-        borderColor: '#475569',
-        borderWidth: 1,
-      },
-    },
-  };
-
   return (
     <div className="bg-slate-900/30 border-t border-slate-800 p-4">
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-xs font-bold text-slate-400 uppercase">📊 Live Analytics</span>
+        <BarChart3 className="w-4 h-4 text-slate-400" />
+        <span className="text-xs font-bold text-slate-400 uppercase">Live Analytics</span>
         <div className="flex-1 h-px bg-slate-800"></div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* RPS Over Time */}
-        <div className="lg:col-span-2 bg-slate-900 p-4 rounded border border-slate-700">
+        <div className="bg-slate-900 p-4 rounded border border-slate-700">
           <div className="flex justify-between items-center mb-2">
-            <h4 className="text-xs font-bold text-blue-400 uppercase">Requests Per Second (Last 30s)</h4>
+            <h4 className="text-xs font-bold text-blue-400 uppercase">HTTP Requests Per Second</h4>
             <span className="text-[10px] font-mono text-slate-500">{rpsHistory[rpsHistory.length - 1]} RPS</span>
           </div>
           <div className="h-40">
@@ -154,39 +138,37 @@ export const LiveGraphs: React.FC<LiveGraphsProps> = ({
           </div>
         </div>
 
-        {/* Status Distribution */}
+        {/* UDP/TCP Packets Over Time */}
         <div className="bg-slate-900 p-4 rounded border border-slate-700">
-          <h4 className="text-xs font-bold text-purple-400 uppercase mb-2">Request Status Distribution</h4>
-          <div className="h-40">
-            <Doughnut data={statusChartData} options={doughnutOptions} />
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-xs font-bold text-purple-400 uppercase">Network Packets Per Second</h4>
+            <div className="flex gap-3 text-[10px] font-mono">
+              <span className="text-blue-400">UDP: {udpHistory[udpHistory.length - 1]}/s</span>
+              <span className="text-purple-400">TCP: {tcpHistory[tcpHistory.length - 1]}/s</span>
+            </div>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-[10px]">
-            <div className="bg-green-900/20 p-2 rounded border border-green-700/30 text-center">
-              <div className="text-green-400 font-bold">{allowedRequests}</div>
-              <div className="text-slate-500">Allowed</div>
-            </div>
-            <div className="bg-red-900/20 p-2 rounded border border-red-700/30 text-center">
-              <div className="text-red-400 font-bold">{blockedRequests}</div>
-              <div className="text-slate-500">Blocked</div>
-            </div>
+          <div className="h-40">
+            <Line data={packetChartData} options={chartOptions} />
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="lg:col-span-3 grid grid-cols-3 gap-3">
+        <div className="lg:col-span-2 grid grid-cols-4 gap-3">
           <div className="bg-slate-900 p-3 rounded border border-slate-700">
             <div className="text-[10px] text-slate-500 uppercase mb-1">Total Requests</div>
             <div className="text-2xl font-mono text-white">{totalRequests}</div>
           </div>
           <div className="bg-slate-900 p-3 rounded border border-slate-700">
-            <div className="text-[10px] text-slate-500 uppercase mb-1">Banned IPs</div>
-            <div className="text-2xl font-mono text-red-400">{bannedIpsCount}</div>
+            <div className="text-[10px] text-slate-500 uppercase mb-1">Allowed</div>
+            <div className="text-2xl font-mono text-green-400">{allowedRequests}</div>
           </div>
           <div className="bg-slate-900 p-3 rounded border border-slate-700">
-            <div className="text-[10px] text-slate-500 uppercase mb-1">Block Rate</div>
-            <div className="text-2xl font-mono text-amber-400">
-              {totalRequests > 0 ? Math.round((blockedRequests / totalRequests) * 100) : 0}%
-            </div>
+            <div className="text-[10px] text-slate-500 uppercase mb-1">Blocked</div>
+            <div className="text-2xl font-mono text-red-400">{blockedRequests}</div>
+          </div>
+          <div className="bg-slate-900 p-3 rounded border border-slate-700">
+            <div className="text-[10px] text-slate-500 uppercase mb-1">Banned IPs</div>
+            <div className="text-2xl font-mono text-amber-400">{bannedIpsCount}</div>
           </div>
         </div>
       </div>

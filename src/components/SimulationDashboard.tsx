@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TrafficGraph } from './TrafficGraph';
 import { LiveGraphs } from './LiveGraphs';
+import { AlertTriangle, Shield, Users, Swords, Info, Settings, Network, Zap, X } from 'lucide-react';
 
 // --- Types ---
 interface SimEvent {
@@ -33,6 +34,28 @@ interface IpHistory {
 
 // --- Helper Functions ---
 const randomIp = () => `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+
+// Realistic IP pools for different traffic types
+const attackerIpPool: string[] = [];
+const legitimateIpPool: string[] = [];
+
+// Generate attacker IPs (distributed across different ranges) - smaller pool means faster rate limit hits
+for (let i = 0; i < 30; i++) {
+  const subnet = Math.floor(Math.random() * 4); // 4 different subnets
+  if (subnet === 0) attackerIpPool.push(`45.${Math.floor(Math.random() * 100)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`);
+  else if (subnet === 1) attackerIpPool.push(`103.${Math.floor(Math.random() * 100)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`);
+  else if (subnet === 2) attackerIpPool.push(`185.${Math.floor(Math.random() * 100)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`);
+  else attackerIpPool.push(`211.${Math.floor(Math.random() * 100)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`);
+}
+
+// Generate legitimate user IPs (residential-looking)
+for (let i = 0; i < 50; i++) {
+  legitimateIpPool.push(`10.0.${Math.floor(Math.random() * 10)}.${100 + i}`);
+}
+
+const getAttackerIp = () => attackerIpPool[Math.floor(Math.random() * attackerIpPool.length)];
+const getLegitimateIp = () => legitimateIpPool[Math.floor(Math.random() * legitimateIpPool.length)];
+
 const randomUa = () => {
   const uas = ['Mozilla/5.0 (Windows NT 10.0)', 'FiveM/2699', 'CitizenFX/1.0', 'Python-urllib/3.8', 'curl/7.68.0', 'Go-http-client/1.1'];
   return uas[Math.floor(Math.random() * uas.length)];
@@ -58,6 +81,8 @@ export const SimulationDashboard: React.FC = () => {
   const [rpsHistory, setRpsHistory] = useState<number[]>(new Array(30).fill(0));
   const [udpPacketRate, setUdpPacketRate] = useState(0);
   const [tcpPacketRate, setTcpPacketRate] = useState(0);
+  const [udpHistory, setUdpHistory] = useState<number[]>(new Array(30).fill(0));
+  const [tcpHistory, setTcpHistory] = useState<number[]>(new Array(30).fill(0));
   const [rateLimitPerSecond, setRateLimitPerSecond] = useState(10);
   const [rateLimitPer10Sec, setRateLimitPer10Sec] = useState(50);
   const [rateLimitPerMinute, setRateLimitPerMinute] = useState(200);
@@ -72,6 +97,8 @@ export const SimulationDashboard: React.FC = () => {
   const whitelistedRef = useRef(whitelistedIps);
   const ipHistoryRef = useRef<IpHistory>({});
   const requestCountRef = useRef(0);
+  const udpCountRef = useRef(0);
+  const tcpCountRef = useRef(0);
 
   // Sync refs
   useEffect(() => { statsRef.current = stats; }, [stats]);
@@ -119,6 +146,13 @@ export const SimulationDashboard: React.FC = () => {
 
     // Increment request counter for RPS tracking
     requestCountRef.current++;
+    
+    // Track UDP/TCP separately
+    if (evt.path.startsWith('UDP:')) {
+      udpCountRef.current++;
+    } else if (evt.path.startsWith('TCP:')) {
+      tcpCountRef.current++;
+    }
 
     // Update Stats
     setStats(prev => ({
@@ -157,7 +191,7 @@ export const SimulationDashboard: React.FC = () => {
         if (Math.random() < 0.4) {
           const numReqs = Math.ceil(playerCount / 5);
           for (let i = 0; i < numReqs; i++) {
-            const ip = `10.0.0.${(i % 100) + 100}`;
+            const ip = legitimateIpPool[i % legitimateIpPool.length];
             if (bannedRef.current.includes(ip)) continue;
 
             // Players send various types of requests
@@ -200,101 +234,104 @@ export const SimulationDashboard: React.FC = () => {
 
       // 2. Simulate Attack (Bad Traffic)
       if (isAttacking) {
-        const attackRate = 15;
+        const attackRate = 25; // Increased from 15 for more aggressive attacks
         for (let i = 0; i < attackRate; i++) {
-          const ip = randomIp();
+          const ip = getAttackerIp();
           const isWhitelisted = whitelistedRef.current.includes(ip);
           const isBanned = bannedRef.current.includes(ip);
 
           if (isWhitelisted) continue; // Skip whitelisted IPs
-
-          // Check rate limit violations for auto-ban
-          if (autoBanEnabled && !isBanned) {
-            const rateCheck = checkRateLimitViolation(ip);
-            if (rateCheck.violated) {
-              setBannedIps(prev => [...prev, ip]);
-              addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
-              setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - ${rateCheck.reason}`, ...prev].slice(0, 5));
-              continue;
-            }
-          }
 
           if (isBanned) {
             if (Math.random() > 0.95) {
               addEvent({ ip, status: 444, path: '/(blocked)', type: 'bad' });
             }
           } else {
+            // Add the malicious request first
             addEvent({ ip, status: 502, path: '/wp-login.php', type: 'attack' });
+            
+            // Then check rate limits (now includes this request)
+            if (autoBanEnabled) {
+              const rateCheck = checkRateLimitViolation(ip);
+              if (rateCheck.violated) {
+                setBannedIps(prev => [...prev, ip]);
+                addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
+                setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - ${rateCheck.reason}`, ...prev].slice(0, 5));
+              }
+            }
           }
         }
       }
 
       // 3. UDP Flood Simulation
       if (isUdpFlooding) {
-        const floodIps = Array.from({ length: 20 }, () => randomIp());
+        const floodIps = Array.from({ length: 30 }, () => getAttackerIp()); // Increased intensity
         floodIps.forEach(ip => {
           const isWhitelisted = whitelistedRef.current.includes(ip);
           const isBanned = bannedRef.current.includes(ip);
           if (isWhitelisted) return;
 
-          if (autoBanEnabled && !isBanned) {
-            const rateCheck = checkRateLimitViolation(ip);
-            if (rateCheck.violated) {
-              setBannedIps(prev => [...prev, ip]);
-              addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
-              setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - UDP flood ${rateCheck.reason}`, ...prev].slice(0, 5));
-              return;
-            }
-          }
-
           if (!isBanned) {
+            // Add the flood packet first
             addEvent({ ip, path: 'UDP:30120', method: 'FLOOD', status: 444, type: 'attack', ua: 'UDP_PACKET' });
+            
+            // Then check rate limits
+            if (autoBanEnabled) {
+              const rateCheck = checkRateLimitViolation(ip);
+              if (rateCheck.violated) {
+                setBannedIps(prev => [...prev, ip]);
+                addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
+                setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - UDP flood ${rateCheck.reason}`, ...prev].slice(0, 5));
+              }
+            }
           }
         });
       }
 
       // 4. TCP SYN Flood Simulation
       if (isTcpFlooding) {
-        const synIps = Array.from({ length: 10 }, () => randomIp());
+        const synIps = Array.from({ length: 20 }, () => getAttackerIp()); // Increased intensity
         synIps.forEach(ip => {
           const isWhitelisted = whitelistedRef.current.includes(ip);
           const isBanned = bannedRef.current.includes(ip);
           if (isWhitelisted) return;
 
-          if (autoBanEnabled && !isBanned) {
-            const rateCheck = checkRateLimitViolation(ip);
-            if (rateCheck.violated) {
-              setBannedIps(prev => [...prev, ip]);
-              addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
-              setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - SYN flood ${rateCheck.reason}`, ...prev].slice(0, 5));
-              return;
-            }
-          }
-
           if (!isBanned) {
+            // Add the SYN packet first
             addEvent({ ip, path: 'TCP:30120', method: 'SYN', status: 444, type: 'attack', ua: 'TCP_SYN' });
+            
+            // Then check rate limits
+            if (autoBanEnabled) {
+              const rateCheck = checkRateLimitViolation(ip);
+              if (rateCheck.violated) {
+                setBannedIps(prev => [...prev, ip]);
+                addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
+                setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - SYN flood ${rateCheck.reason}`, ...prev].slice(0, 5));
+              }
+            }
           }
         });
       }
 
-      // Update RPS Graph every second (approx 5 ticks)
+      // Update display and graph history every second (5 ticks)
       if (tickCount % 5 === 0) {
-        // Use actual request count from the last second
+        // Use accumulated counts from the last second
         const currentRps = requestCountRef.current;
-        requestCountRef.current = 0; // Reset counter
+        const currentUdp = udpCountRef.current;
+        const currentTcp = tcpCountRef.current;
         
         setStats(prev => ({ ...prev, rps: currentRps }));
-        setRpsHistory(prev => [...prev.slice(1), currentRps]);
-
-        // Calculate UDP/TCP packet rates based on actual events
-        const recentEvents = events.slice(0, 10);
-        const udpCount = recentEvents.filter(e => e.path.startsWith('UDP:')).length;
-        const tcpCount = recentEvents.filter(e => e.path.startsWith('TCP:')).length;
+        setUdpPacketRate(currentUdp);
+        setTcpPacketRate(currentTcp);
         
-        const baseUdp = playerCount * 20;
-        const baseTcp = playerCount * 2;
-        setUdpPacketRate(baseUdp + udpCount * 100 + (isUdpFlooding ? 5000 : 0));
-        setTcpPacketRate(baseTcp + tcpCount * 50 + (isTcpFlooding ? 2000 : 0));
+        setRpsHistory(prev => [...prev.slice(1), currentRps]);
+        setUdpHistory(prev => [...prev.slice(1), currentUdp]);
+        setTcpHistory(prev => [...prev.slice(1), currentTcp]);
+        
+        // Reset counters for next second
+        requestCountRef.current = 0;
+        udpCountRef.current = 0;
+        tcpCountRef.current = 0;
       }
 
     }, 200);
@@ -318,8 +355,12 @@ export const SimulationDashboard: React.FC = () => {
     setBannedIps([]);
     setAlerts([]);
     setRpsHistory(new Array(30).fill(0));
+    setUdpHistory(new Array(30).fill(0));
+    setTcpHistory(new Array(30).fill(0));
     ipHistoryRef.current = {};
     requestCountRef.current = 0;
+    udpCountRef.current = 0;
+    tcpCountRef.current = 0;
     setPlayerCount(0);
     setIsAttacking(false);
     setIsUdpFlooding(false);
@@ -341,25 +382,53 @@ export const SimulationDashboard: React.FC = () => {
   };
 
   const sendBadPacket = () => {
-    addEvent({
-      ip: randomIp(),
-      path: '/.env',
-      method: 'GET',
-      status: 403,
-      type: 'bad',
-      ua: 'curl/7.68.0'
-    });
+    const ip = getAttackerIp();
+    const isWhitelisted = whitelistedIps.includes(ip);
+    const isBanned = bannedIps.includes(ip);
+
+    if (isWhitelisted) return;
+
+    if (isBanned) {
+      addEvent({ ip, status: 444, path: '/(blocked)', type: 'bad' });
+    } else {
+      // Add the bad request first
+      addEvent({
+        ip,
+        path: '/.env',
+        method: 'GET',
+        status: 403,
+        type: 'bad',
+        ua: 'curl/7.68.0'
+      });
+      
+      // Then check rate limits
+      if (autoBanEnabled) {
+        const rateCheck = checkRateLimitViolation(ip);
+        if (rateCheck.violated) {
+          setBannedIps(prev => [...prev, ip]);
+          addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
+          setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - ${rateCheck.reason}`, ...prev].slice(0, 5));
+        }
+      }
+    }
   };
 
   const sendGoodPacket = () => {
-    addEvent({
-      ip: randomIp(),
-      path: '/players.json',
-      method: 'GET',
-      status: 200,
-      type: 'good',
-      ua: 'CitizenFX/1.0'
-    });
+    const ip = getLegitimateIp();
+    const isBanned = bannedIps.includes(ip);
+
+    if (isBanned) {
+      addEvent({ ip, status: 444, path: '/(blocked)', type: 'bad' });
+    } else {
+      addEvent({
+        ip,
+        path: '/players.json',
+        method: 'GET',
+        status: 200,
+        type: 'good',
+        ua: 'CitizenFX/1.0'
+      });
+    }
   };
 
   return (
@@ -367,7 +436,7 @@ export const SimulationDashboard: React.FC = () => {
       {/* Warning Disclaimer */}
       <div className="bg-amber-900/20 border border-amber-700/50 rounded-xl p-4">
         <div className="flex items-start gap-3">
-          <div className="text-2xl">⚠️</div>
+          <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0" />
           <div>
             <h3 className="text-amber-400 font-bold mb-1">100% Offline Browser Simulation</h3>
             <p className="text-sm text-slate-300">
@@ -408,9 +477,15 @@ export const SimulationDashboard: React.FC = () => {
 
         {/* Player Controls */}
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase mb-3">
-            Simulate Players
-          </label>
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-3.5 h-3.5 text-slate-400" />
+            <label className="text-xs font-bold text-slate-400 uppercase">
+              Simulate Players
+            </label>
+            <div title="Simulates legitimate FiveM players sending HTTP, UDP, and TCP traffic">
+              <Info className="w-3 h-3 text-slate-500 cursor-help" />
+            </div>
+          </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
             <button onClick={() => setPlayerCount(0)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 0 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>0</button>
             <button onClick={() => setPlayerCount(10)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 10 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>10</button>
@@ -429,31 +504,49 @@ export const SimulationDashboard: React.FC = () => {
 
         {/* Attack Controls */}
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase mb-3">
-            Threat Simulation
-          </label>
+          <div className="flex items-center gap-2 mb-3">
+            <Swords className="w-3.5 h-3.5 text-slate-400" />
+            <label className="text-xs font-bold text-slate-400 uppercase">
+              Threat Simulation
+            </label>
+            <div title="Simulate various attack types: DDoS, UDP floods, TCP SYN floods, and malicious HTTP requests">
+              <Info className="w-3 h-3 text-slate-500 cursor-help" />
+            </div>
+          </div>
           <div className="space-y-2">
             <button
               onClick={toggleAttack}
-              className={`w-full py-2 px-3 rounded font-bold text-xs transition-all ${isAttacking
+              className={`w-full py-2.5 px-3 rounded font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${isAttacking
                   ? 'bg-red-600 text-white border border-red-400 animate-pulse'
                   : 'bg-slate-700 text-slate-300 border border-slate-600 hover:border-slate-500 hover:bg-slate-600'
                 }`}
             >
-              {isAttacking ? '🛑 STOP DDoS' : '⚔️ START DDoS'}
+              {isAttacking ? (
+                <>
+                  <Shield className="w-3.5 h-3.5 shrink-0" />
+                  <span>STOP DDoS</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-3.5 h-3.5 shrink-0" />
+                  <span>START DDoS</span>
+                </>
+              )}
             </button>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={sendBadPacket}
-                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/50 hover:border-amber-500 hover:bg-amber-600/30 transition-all"
+                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/50 hover:border-amber-500 hover:bg-amber-600/30 transition-all flex items-center justify-center gap-1 whitespace-nowrap"
               >
-                ⚠️ BAD HTTP
+                <X className="w-3 h-3 shrink-0" />
+                <span>BAD</span>
               </button>
               <button
                 onClick={sendGoodPacket}
-                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-green-600/20 text-green-400 border border-green-600/50 hover:border-green-500 hover:bg-green-600/30 transition-all"
+                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-green-600/20 text-green-400 border border-green-600/50 hover:border-green-500 hover:bg-green-600/30 transition-all flex items-center justify-center gap-1 whitespace-nowrap"
               >
-                ✅ GOOD HTTP
+                <Shield className="w-3 h-3 shrink-0" />
+                <span>GOOD</span>
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -466,12 +559,22 @@ export const SimulationDashboard: React.FC = () => {
                     setAlerts(prev => [`[${new Date().toLocaleTimeString()}] UDP Flood stopped`, ...prev].slice(0, 5));
                   }
                 }}
-                className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all ${isUdpFlooding
+                className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all flex items-center justify-center gap-1 ${isUdpFlooding
                     ? 'bg-blue-600 text-white border border-blue-400 animate-pulse'
                     : 'bg-blue-600/20 text-blue-400 border border-blue-600/50 hover:border-blue-500 hover:bg-blue-600/30'
                   }`}
               >
-                {isUdpFlooding ? '🛑 STOP UDP' : '📡 UDP FLOOD'}
+                {isUdpFlooding ? (
+                  <>
+                    <Shield className="w-3 h-3 shrink-0" />
+                    <span>STOP</span>
+                  </>
+                ) : (
+                  <>
+                    <Network className="w-3 h-3 shrink-0" />
+                    <span>UDP</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={() => {
@@ -482,32 +585,56 @@ export const SimulationDashboard: React.FC = () => {
                     setAlerts(prev => [`[${new Date().toLocaleTimeString()}] TCP SYN Flood stopped`, ...prev].slice(0, 5));
                   }
                 }}
-                className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all ${isTcpFlooding
+                className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all flex items-center justify-center gap-1 whitespace-nowrap ${isTcpFlooding
                     ? 'bg-purple-600 text-white border border-purple-400 animate-pulse'
                     : 'bg-purple-600/20 text-purple-400 border border-purple-600/50 hover:border-purple-500 hover:bg-purple-600/30'
                   }`}
               >
-                {isTcpFlooding ? '🛑 STOP TCP' : '🔌 TCP SYN'}
+                {isTcpFlooding ? (
+                  <>
+                    <Shield className="w-3 h-3 shrink-0" />
+                    <span>STOP</span>
+                  </>
+                ) : (
+                  <>
+                    <Network className="w-3 h-3 shrink-0" />
+                    <span>TCP</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
 
         {/* Firewall Toggle */}
-        <div className="flex items-center justify-between bg-slate-900 p-3 rounded border border-slate-700">
-          <span className="text-xs font-bold text-slate-300">AUTO-BAN ENGINE</span>
-          <button
-            onClick={() => setAutoBanEnabled(!autoBanEnabled)}
-            className={`w-8 h-4 rounded-full transition-colors relative ${autoBanEnabled ? 'bg-green-500' : 'bg-slate-600'}`}
-          >
-            <span className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${autoBanEnabled ? 'translate-x-4' : ''}`} />
-          </button>
+        <div className="bg-slate-900 p-3 rounded border border-slate-700">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5 text-slate-300" />
+              <span className="text-xs font-bold text-slate-300">AUTO-BAN ENGINE</span>
+              <div title="Automatically bans IPs that exceed rate limits">
+                <Info className="w-3 h-3 text-slate-500 cursor-help" />
+              </div>
+            </div>
+            <button
+              onClick={() => setAutoBanEnabled(!autoBanEnabled)}
+              className={`w-11 h-6 rounded-full transition-all relative shadow-inner ${autoBanEnabled ? 'bg-green-500' : 'bg-slate-600'}`}
+            >
+              <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-md ${autoBanEnabled ? 'translate-x-5' : ''}`} />
+            </button>
+          </div>
+          <div className="text-[9px] text-slate-500">
+            {autoBanEnabled ? 'Active: IPs violating rate limits will be blocked' : 'Disabled: Manual banning only'}
+          </div>
         </div>
 
         {/* Rate Limit Configuration */}
         <div className="bg-slate-900 p-3 rounded border border-slate-700 space-y-2">
           <div className="text-[10px] font-bold text-amber-400 uppercase mb-2 flex items-center gap-1">
-            <span>⚙️</span> Advanced Rate Limits
+            <Settings className="w-3.5 h-3.5" /> Advanced Rate Limits
+            <div title="Configure thresholds for automatic IP banning. IPs exceeding any limit will be banned.">
+              <Info className="w-3 h-3 text-slate-500 cursor-help font-normal" />
+            </div>
           </div>
           <div>
             <div className="flex justify-between items-center mb-1">
@@ -575,7 +702,12 @@ export const SimulationDashboard: React.FC = () => {
 
         {/* IP Management */}
         <div className="bg-slate-900 p-3 rounded border border-slate-700">
-          <div className="text-[10px] font-bold text-slate-400 uppercase mb-2">IP Management</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center gap-1">
+            <Network className="w-3.5 h-3.5" /> IP Management
+            <div title="Whitelist IPs to bypass all rate limits and protections">
+              <Info className="w-3 h-3 text-slate-500 cursor-help font-normal" />
+            </div>
+          </div>
           <div className="space-y-2">
             <div className="flex gap-2">
               <input
@@ -712,7 +844,9 @@ export const SimulationDashboard: React.FC = () => {
               <div className="bg-slate-800 border border-slate-600 rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
                 <div className="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
                   <h3 className="font-bold text-white">IP Details: {selectedIp}</h3>
-                  <button onClick={() => setSelectedIp(null)} className="text-slate-400 hover:text-white">✕</button>
+                  <button onClick={() => setSelectedIp(null)} className="text-slate-400 hover:text-white">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -768,6 +902,8 @@ export const SimulationDashboard: React.FC = () => {
         {/* Live Graphs Section */}
         <LiveGraphs
           rpsHistory={rpsHistory}
+          udpHistory={udpHistory}
+          tcpHistory={tcpHistory}
           totalRequests={stats.totalRequests}
           blockedRequests={stats.blockedRequests}
           allowedRequests={stats.allowedRequests}
