@@ -798,8 +798,8 @@ export const SimulationDashboard: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <div className="text-[10px] text-slate-500 uppercase font-bold">LIVE LOG STREAM</div>
-              <button onClick={clearLogs} className="px-1.5 h-5 flex items-center text-[9px] bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded transition-all">Clear</button>
-              <button onClick={resetSimulation} className="px-1.5 h-5 flex items-center text-[9px] bg-red-900/10 hover:bg-red-900/20 text-red-400/70 hover:text-red-400 rounded transition-all">Reset</button>
+              <button onClick={clearLogs} className="px-1.5 h-5 flex items-center text-[12px] bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded transition-all">Clear</button>
+              <button onClick={resetSimulation} className="px-1.5 h-5 flex items-center text-[12px] bg-red-900/10 hover:bg-red-900/20 text-red-400/70 hover:text-red-400 rounded transition-all">Reset</button>
             </div>
           </div>
 
