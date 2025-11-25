@@ -146,7 +146,7 @@ export const SimulationDashboard: React.FC = () => {
 
     // Increment request counter for RPS tracking
     requestCountRef.current++;
-    
+
     // Track UDP/TCP separately
     if (evt.path.startsWith('UDP:')) {
       udpCountRef.current++;
@@ -249,7 +249,7 @@ export const SimulationDashboard: React.FC = () => {
           } else {
             // Add the malicious request first
             addEvent({ ip, status: 502, path: '/wp-login.php', type: 'attack' });
-            
+
             // Then check rate limits (now includes this request)
             if (autoBanEnabled) {
               const rateCheck = checkRateLimitViolation(ip);
@@ -274,7 +274,7 @@ export const SimulationDashboard: React.FC = () => {
           if (!isBanned) {
             // Add the flood packet first
             addEvent({ ip, path: 'UDP:30120', method: 'FLOOD', status: 444, type: 'attack', ua: 'UDP_PACKET' });
-            
+
             // Then check rate limits
             if (autoBanEnabled) {
               const rateCheck = checkRateLimitViolation(ip);
@@ -299,7 +299,7 @@ export const SimulationDashboard: React.FC = () => {
           if (!isBanned) {
             // Add the SYN packet first
             addEvent({ ip, path: 'TCP:30120', method: 'SYN', status: 444, type: 'attack', ua: 'TCP_SYN' });
-            
+
             // Then check rate limits
             if (autoBanEnabled) {
               const rateCheck = checkRateLimitViolation(ip);
@@ -319,15 +319,15 @@ export const SimulationDashboard: React.FC = () => {
         const currentRps = requestCountRef.current;
         const currentUdp = udpCountRef.current;
         const currentTcp = tcpCountRef.current;
-        
+
         setStats(prev => ({ ...prev, rps: currentRps }));
         setUdpPacketRate(currentUdp);
         setTcpPacketRate(currentTcp);
-        
+
         setRpsHistory(prev => [...prev.slice(1), currentRps]);
         setUdpHistory(prev => [...prev.slice(1), currentUdp]);
         setTcpHistory(prev => [...prev.slice(1), currentTcp]);
-        
+
         // Reset counters for next second
         requestCountRef.current = 0;
         udpCountRef.current = 0;
@@ -400,7 +400,7 @@ export const SimulationDashboard: React.FC = () => {
         type: 'bad',
         ua: 'curl/7.68.0'
       });
-      
+
       // Then check rate limits
       if (autoBanEnabled) {
         const rateCheck = checkRateLimitViolation(ip);
@@ -440,8 +440,8 @@ export const SimulationDashboard: React.FC = () => {
           <div>
             <h3 className="text-amber-400 font-bold mb-1">100% Offline Browser Simulation</h3>
             <p className="text-sm text-slate-300">
-              This simulation runs entirely in your browser with <strong className="text-amber-300">zero network activity</strong>. 
-              No real traffic is sent or received - it's a visual demonstration of firewall concepts. 
+              This simulation runs entirely in your browser with <strong className="text-amber-300">zero network activity</strong>.
+              No real traffic is sent or received - it's a visual demonstration of firewall concepts.
               Real DDoS protection requires actual server-side tools like iptables, fail2ban, nginx rate limiting, and CloudFlare.
             </p>
           </div>
@@ -453,464 +453,464 @@ export const SimulationDashboard: React.FC = () => {
         {/* Left Sidebar: Controls */}
         <div className="w-full lg:w-80 bg-slate-800/50 border-r border-slate-700 p-6 flex flex-col gap-6">
 
-        {/* Status Card */}
-        <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-          <div className="flex justify-between items-center mb-2">
-            <div className="text-xs text-slate-400 uppercase font-bold">System Status</div>
-          </div>
-          <div className="flex justify-between items-end mb-2">
-            <span className="text-2xl font-mono text-white">{stats.rps} <span className="text-sm text-slate-500">RPS</span></span>
-            <div className={`w-3 h-3 rounded-full ${isAttacking ? 'bg-red-500 animate-ping' : 'bg-green-500'}`}></div>
-          </div>
-          <TrafficGraph data={rpsHistory} color={isAttacking ? '#ef4444' : '#3b82f6'} height={40} />
-          <div className="grid grid-cols-2 gap-2 mt-2 text-[10px]">
-            <div className="bg-black/30 p-1.5 rounded">
-              <div className="text-slate-500">UDP</div>
-              <div className="text-blue-400 font-mono font-bold">{udpPacketRate}/s</div>
+          {/* Status Card */}
+          <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
+            <div className="flex justify-between items-center mb-2">
+              <div className="text-xs text-slate-400 uppercase font-bold">System Status</div>
             </div>
-            <div className="bg-black/30 p-1.5 rounded">
-              <div className="text-slate-500">TCP</div>
-              <div className="text-purple-400 font-mono font-bold">{tcpPacketRate}/s</div>
+            <div className="flex justify-between items-end mb-2">
+              <span className="text-2xl font-mono text-white">{stats.rps} <span className="text-sm text-slate-500">RPS</span></span>
+              <div className={`w-3 h-3 rounded-full ${isAttacking ? 'bg-red-500 animate-ping' : 'bg-green-500'}`}></div>
+            </div>
+            <TrafficGraph data={rpsHistory} color={isAttacking ? '#ef4444' : '#3b82f6'} height={40} />
+            <div className="grid grid-cols-2 gap-2 mt-2 text-[10px]">
+              <div className="bg-black/30 p-1.5 rounded">
+                <div className="text-slate-500">UDP</div>
+                <div className="text-blue-400 font-mono font-bold">{udpPacketRate}/s</div>
+              </div>
+              <div className="bg-black/30 p-1.5 rounded">
+                <div className="text-slate-500">TCP</div>
+                <div className="text-purple-400 font-mono font-bold">{tcpPacketRate}/s</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Player Controls */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Users className="w-3.5 h-3.5 text-slate-400" />
-            <label className="text-xs font-bold text-slate-400 uppercase">
-              Simulate Players
-            </label>
-            <div title="Simulates legitimate FiveM players sending HTTP, UDP, and TCP traffic">
-              <Info className="w-3 h-3 text-slate-500 cursor-help" />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            <button onClick={() => setPlayerCount(0)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 0 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>0</button>
-            <button onClick={() => setPlayerCount(10)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 10 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>10</button>
-            <button onClick={() => setPlayerCount(100)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 100 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>100</button>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="200"
-            value={playerCount}
-            onChange={(e) => setPlayerCount(parseInt(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-          />
-          <div className="text-right text-xs text-blue-400 font-mono mt-1">{playerCount} Active</div>
-        </div>
-
-        {/* Attack Controls */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Swords className="w-3.5 h-3.5 text-slate-400" />
-            <label className="text-xs font-bold text-slate-400 uppercase">
-              Threat Simulation
-            </label>
-            <div title="Simulate various attack types: DDoS, UDP floods, TCP SYN floods, and malicious HTTP requests">
-              <Info className="w-3 h-3 text-slate-500 cursor-help" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <button
-              onClick={toggleAttack}
-              className={`w-full py-2.5 px-3 rounded font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${isAttacking
-                  ? 'bg-red-600 text-white border border-red-400 animate-pulse'
-                  : 'bg-slate-700 text-slate-300 border border-slate-600 hover:border-slate-500 hover:bg-slate-600'
-                }`}
-            >
-              {isAttacking ? (
-                <>
-                  <Shield className="w-3.5 h-3.5 shrink-0" />
-                  <span>STOP DDoS</span>
-                </>
-              ) : (
-                <>
-                  <Zap className="w-3.5 h-3.5 shrink-0" />
-                  <span>START DDoS</span>
-                </>
-              )}
-            </button>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={sendBadPacket}
-                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/50 hover:border-amber-500 hover:bg-amber-600/30 transition-all flex items-center justify-center gap-1 whitespace-nowrap"
-              >
-                <X className="w-3 h-3 shrink-0" />
-                <span>BAD</span>
-              </button>
-              <button
-                onClick={sendGoodPacket}
-                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-green-600/20 text-green-400 border border-green-600/50 hover:border-green-500 hover:bg-green-600/30 transition-all flex items-center justify-center gap-1 whitespace-nowrap"
-              >
-                <Shield className="w-3 h-3 shrink-0" />
-                <span>GOOD</span>
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => {
-                  setIsUdpFlooding(!isUdpFlooding);
-                  if (!isUdpFlooding) {
-                    setAlerts(prev => [`[${new Date().toLocaleTimeString()}] UDP Flood started - 5000+ pps`, ...prev].slice(0, 5));
-                  } else {
-                    setAlerts(prev => [`[${new Date().toLocaleTimeString()}] UDP Flood stopped`, ...prev].slice(0, 5));
-                  }
-                }}
-                className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all flex items-center justify-center gap-1 ${isUdpFlooding
-                    ? 'bg-blue-600 text-white border border-blue-400 animate-pulse'
-                    : 'bg-blue-600/20 text-blue-400 border border-blue-600/50 hover:border-blue-500 hover:bg-blue-600/30'
-                  }`}
-              >
-                {isUdpFlooding ? (
-                  <>
-                    <Shield className="w-3 h-3 shrink-0" />
-                    <span>STOP</span>
-                  </>
-                ) : (
-                  <>
-                    <Network className="w-3 h-3 shrink-0" />
-                    <span>UDP</span>
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setIsTcpFlooding(!isTcpFlooding);
-                  if (!isTcpFlooding) {
-                    setAlerts(prev => [`[${new Date().toLocaleTimeString()}] TCP SYN Flood started - 2000+ cps`, ...prev].slice(0, 5));
-                  } else {
-                    setAlerts(prev => [`[${new Date().toLocaleTimeString()}] TCP SYN Flood stopped`, ...prev].slice(0, 5));
-                  }
-                }}
-                className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all flex items-center justify-center gap-1 whitespace-nowrap ${isTcpFlooding
-                    ? 'bg-purple-600 text-white border border-purple-400 animate-pulse'
-                    : 'bg-purple-600/20 text-purple-400 border border-purple-600/50 hover:border-purple-500 hover:bg-purple-600/30'
-                  }`}
-              >
-                {isTcpFlooding ? (
-                  <>
-                    <Shield className="w-3 h-3 shrink-0" />
-                    <span>STOP</span>
-                  </>
-                ) : (
-                  <>
-                    <Network className="w-3 h-3 shrink-0" />
-                    <span>TCP</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Firewall Toggle */}
-        <div className="bg-slate-900 p-3 rounded border border-slate-700">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Shield className="w-3.5 h-3.5 text-slate-300" />
-              <span className="text-xs font-bold text-slate-300">AUTO-BAN ENGINE</span>
-              <div title="Automatically bans IPs that exceed rate limits">
+          {/* Player Controls */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="w-3.5 h-3.5 text-slate-400" />
+              <label className="text-xs font-bold text-slate-400 uppercase">
+                Simulate Players
+              </label>
+              <div title="Simulates legitimate FiveM players sending HTTP, UDP, and TCP traffic">
                 <Info className="w-3 h-3 text-slate-500 cursor-help" />
               </div>
             </div>
-            <button
-              onClick={() => setAutoBanEnabled(!autoBanEnabled)}
-              className={`w-11 h-6 rounded-full transition-all relative shadow-inner ${autoBanEnabled ? 'bg-green-500' : 'bg-slate-600'}`}
-            >
-              <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-md ${autoBanEnabled ? 'translate-x-5' : ''}`} />
-            </button>
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <button onClick={() => setPlayerCount(0)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 0 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>0</button>
+              <button onClick={() => setPlayerCount(10)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 10 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>10</button>
+              <button onClick={() => setPlayerCount(100)} className={`text-xs py-2 px-2 rounded font-bold transition-all ${playerCount === 100 ? 'bg-blue-600 border-2 border-blue-400 text-white shadow-lg shadow-blue-500/50' : 'bg-slate-800 border-2 border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white'}`}>100</button>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="200"
+              value={playerCount}
+              onChange={(e) => setPlayerCount(parseInt(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            />
+            <div className="text-right text-xs text-blue-400 font-mono mt-1">{playerCount} Active</div>
           </div>
-          <div className="text-[9px] text-slate-500">
-            {autoBanEnabled ? 'Active: IPs violating rate limits will be blocked' : 'Disabled: Manual banning only'}
-          </div>
-        </div>
 
-        {/* Rate Limit Configuration */}
-        <div className="bg-slate-900 p-3 rounded border border-slate-700 space-y-2">
-          <div className="text-[10px] font-bold text-amber-400 uppercase mb-2 flex items-center gap-1">
-            <Settings className="w-3.5 h-3.5" /> Advanced Rate Limits
-            <div title="Configure thresholds for automatic IP banning. IPs exceeding any limit will be banned.">
-              <Info className="w-3 h-3 text-slate-500 cursor-help font-normal" />
-            </div>
-          </div>
+          {/* Attack Controls */}
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[9px] font-bold text-slate-400">Per Second</span>
-              <span className="text-[10px] font-mono text-blue-400">{rateLimitPerSecond} req/s</span>
+            <div className="flex items-center gap-2 mb-3">
+              <Swords className="w-3.5 h-3.5 text-slate-400" />
+              <label className="text-xs font-bold text-slate-400 uppercase">
+                Threat Simulation
+              </label>
+              <div title="Simulate various attack types: DDoS, UDP floods, TCP SYN floods, and malicious HTTP requests">
+                <Info className="w-3 h-3 text-slate-500 cursor-help" />
+              </div>
             </div>
-            <input
-              type="range"
-              min="5"
-              max="100"
-              value={rateLimitPerSecond}
-              onChange={(e) => setRateLimitPerSecond(parseInt(e.target.value))}
-              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-            />
-          </div>
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[9px] font-bold text-slate-400">Per 10 Seconds</span>
-              <span className="text-[10px] font-mono text-purple-400">{rateLimitPer10Sec} req/10s</span>
-            </div>
-            <input
-              type="range"
-              min="20"
-              max="300"
-              step="10"
-              value={rateLimitPer10Sec}
-              onChange={(e) => setRateLimitPer10Sec(parseInt(e.target.value))}
-              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-            />
-          </div>
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[9px] font-bold text-slate-400">Per Minute</span>
-              <span className="text-[10px] font-mono text-green-400">{rateLimitPerMinute} req/min</span>
-            </div>
-            <input
-              type="range"
-              min="50"
-              max="1000"
-              step="50"
-              value={rateLimitPerMinute}
-              onChange={(e) => setRateLimitPerMinute(parseInt(e.target.value))}
-              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-            />
-          </div>
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[9px] font-bold text-slate-400">Burst Allowance</span>
-              <span className="text-[10px] font-mono text-amber-400">{burstAllowance} burst</span>
-            </div>
-            <input
-              type="range"
-              min="5"
-              max="100"
-              step="5"
-              value={burstAllowance}
-              onChange={(e) => setBurstAllowance(parseInt(e.target.value))}
-              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-            />
-          </div>
-          <div className="text-[8px] text-slate-500 pt-1 border-t border-slate-800">
-            Auto-ban triggers when any limit is exceeded
-          </div>
-        </div>
-
-        {/* IP Management */}
-        <div className="bg-slate-900 p-3 rounded border border-slate-700">
-          <div className="text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center gap-1">
-            <Network className="w-3.5 h-3.5" /> IP Management
-            <div title="Whitelist IPs to bypass all rate limits and protections">
-              <Info className="w-3 h-3 text-slate-500 cursor-help font-normal" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="192.168.x.x"
-                className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[10px] text-white focus:outline-none focus:border-blue-500"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.currentTarget.value) {
-                    const ip = e.currentTarget.value;
-                    if (!whitelistedIps.includes(ip)) {
-                      setWhitelistedIps(prev => [...prev, ip]);
-                      setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Whitelisted ${ip}`, ...prev].slice(0, 5));
+            <div className="space-y-2">
+              <button
+                onClick={toggleAttack}
+                className={`w-full py-2.5 px-3 rounded font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${isAttacking
+                  ? 'bg-red-600 text-white border border-red-400 animate-pulse'
+                  : 'bg-slate-700 text-slate-300 border border-slate-600 hover:border-slate-500 hover:bg-slate-600'
+                  }`}
+              >
+                {isAttacking ? (
+                  <>
+                    <Shield className="w-3.5 h-3.5 shrink-0" />
+                    <span>STOP DDoS</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-3.5 h-3.5 shrink-0" />
+                    <span>START DDoS</span>
+                  </>
+                )}
+              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={sendBadPacket}
+                  className="w-full py-2 px-2 rounded font-bold text-[10px] bg-amber-600/20 text-amber-400 border border-amber-600/50 hover:border-amber-500 hover:bg-amber-600/30 transition-all flex items-center justify-center gap-1 whitespace-nowrap"
+                >
+                  <X className="w-3 h-3 shrink-0" />
+                  <span>BAD</span>
+                </button>
+                <button
+                  onClick={sendGoodPacket}
+                  className="w-full py-2 px-2 rounded font-bold text-[10px] bg-green-600/20 text-green-400 border border-green-600/50 hover:border-green-500 hover:bg-green-600/30 transition-all flex items-center justify-center gap-1 whitespace-nowrap"
+                >
+                  <Shield className="w-3 h-3 shrink-0" />
+                  <span>GOOD</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setIsUdpFlooding(!isUdpFlooding);
+                    if (!isUdpFlooding) {
+                      setAlerts(prev => [`[${new Date().toLocaleTimeString()}] UDP Flood started - 5000+ pps`, ...prev].slice(0, 5));
+                    } else {
+                      setAlerts(prev => [`[${new Date().toLocaleTimeString()}] UDP Flood stopped`, ...prev].slice(0, 5));
                     }
-                    e.currentTarget.value = '';
-                  }
-                }}
-              />
-              <button className="px-2 py-1 bg-green-600/20 text-green-400 border border-green-600/50 rounded text-[9px] font-bold hover:bg-green-600/30">
-                + WL
+                  }}
+                  className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all flex items-center justify-center gap-1 ${isUdpFlooding
+                    ? 'bg-blue-600 text-white border border-blue-400 animate-pulse'
+                    : 'bg-blue-600/20 text-blue-400 border border-blue-600/50 hover:border-blue-500 hover:bg-blue-600/30'
+                    }`}
+                >
+                  {isUdpFlooding ? (
+                    <>
+                      <Shield className="w-3 h-3 shrink-0" />
+                      <span>STOP</span>
+                    </>
+                  ) : (
+                    <>
+                      <Network className="w-3 h-3 shrink-0" />
+                      <span>UDP</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsTcpFlooding(!isTcpFlooding);
+                    if (!isTcpFlooding) {
+                      setAlerts(prev => [`[${new Date().toLocaleTimeString()}] TCP SYN Flood started - 2000+ cps`, ...prev].slice(0, 5));
+                    } else {
+                      setAlerts(prev => [`[${new Date().toLocaleTimeString()}] TCP SYN Flood stopped`, ...prev].slice(0, 5));
+                    }
+                  }}
+                  className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all flex items-center justify-center gap-1 whitespace-nowrap ${isTcpFlooding
+                    ? 'bg-purple-600 text-white border border-purple-400 animate-pulse'
+                    : 'bg-purple-600/20 text-purple-400 border border-purple-600/50 hover:border-purple-500 hover:bg-purple-600/30'
+                    }`}
+                >
+                  {isTcpFlooding ? (
+                    <>
+                      <Shield className="w-3 h-3 shrink-0" />
+                      <span>STOP</span>
+                    </>
+                  ) : (
+                    <>
+                      <Network className="w-3 h-3 shrink-0" />
+                      <span>TCP</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Firewall Toggle */}
+          <div className="bg-slate-900 p-3 rounded border border-slate-700">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Shield className="w-3.5 h-3.5 text-slate-300" />
+                <span className="text-xs font-bold text-slate-300">AUTO-BAN ENGINE</span>
+                <div title="Automatically bans IPs that exceed rate limits">
+                  <Info className="w-3 h-3 text-slate-500 cursor-help" />
+                </div>
+              </div>
+              <button
+                onClick={() => setAutoBanEnabled(!autoBanEnabled)}
+                className={`w-11 h-6 rounded-full transition-all relative shadow-inner ${autoBanEnabled ? 'bg-green-500' : 'bg-slate-600'}`}
+              >
+                <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-md ${autoBanEnabled ? 'translate-x-5' : ''}`} />
               </button>
             </div>
-            <div className="max-h-20 overflow-y-auto text-[9px] font-mono space-y-1">
-              {whitelistedIps.map(ip => (
-                <div key={ip} className="flex items-center justify-between bg-green-900/10 border border-green-700/30 rounded px-2 py-0.5">
-                  <span className="text-green-400">{ip}</span>
+            <div className="text-[9px] text-slate-500">
+              {autoBanEnabled ? 'Active: IPs violating rate limits will be blocked' : 'Disabled: Manual banning only'}
+            </div>
+          </div>
+
+          {/* Rate Limit Configuration */}
+          <div className="bg-slate-900 p-3 rounded border border-slate-700 space-y-2">
+            <div className="text-[10px] font-bold text-amber-400 uppercase mb-2 flex items-center gap-1">
+              <Settings className="w-3.5 h-3.5" /> Advanced Rate Limits
+              <div title="Configure thresholds for automatic IP banning. IPs exceeding any limit will be banned.">
+                <Info className="w-3 h-3 text-slate-500 cursor-help font-normal" />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[9px] font-bold text-slate-400">Per Second</span>
+                <span className="text-[10px] font-mono text-blue-400">{rateLimitPerSecond} req/s</span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="100"
+                value={rateLimitPerSecond}
+                onChange={(e) => setRateLimitPerSecond(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[9px] font-bold text-slate-400">Per 10 Seconds</span>
+                <span className="text-[10px] font-mono text-purple-400">{rateLimitPer10Sec} req/10s</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="300"
+                step="10"
+                value={rateLimitPer10Sec}
+                onChange={(e) => setRateLimitPer10Sec(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[9px] font-bold text-slate-400">Per Minute</span>
+                <span className="text-[10px] font-mono text-green-400">{rateLimitPerMinute} req/min</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="1000"
+                step="50"
+                value={rateLimitPerMinute}
+                onChange={(e) => setRateLimitPerMinute(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[9px] font-bold text-slate-400">Burst Allowance</span>
+                <span className="text-[10px] font-mono text-amber-400">{burstAllowance} burst</span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="100"
+                step="5"
+                value={burstAllowance}
+                onChange={(e) => setBurstAllowance(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              />
+            </div>
+            <div className="text-[8px] text-slate-500 pt-1 border-t border-slate-800">
+              Auto-ban triggers when any limit is exceeded
+            </div>
+          </div>
+
+          {/* IP Management */}
+          <div className="bg-slate-900 p-3 rounded border border-slate-700">
+            <div className="text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center gap-1">
+              <Network className="w-3.5 h-3.5" /> IP Management
+              <div title="Whitelist IPs to bypass all rate limits and protections">
+                <Info className="w-3 h-3 text-slate-500 cursor-help font-normal" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="192.168.x.x"
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[10px] text-white focus:outline-none focus:border-blue-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.currentTarget.value) {
+                      const ip = e.currentTarget.value;
+                      if (!whitelistedIps.includes(ip)) {
+                        setWhitelistedIps(prev => [...prev, ip]);
+                        setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Whitelisted ${ip}`, ...prev].slice(0, 5));
+                      }
+                      e.currentTarget.value = '';
+                    }
+                  }}
+                />
+                <button className="px-2 py-1 bg-green-600/20 text-green-400 border border-green-600/50 rounded text-[9px] font-bold hover:bg-green-600/30">
+                  + WL
+                </button>
+              </div>
+              <div className="max-h-20 overflow-y-auto text-[9px] font-mono space-y-1">
+                {whitelistedIps.map(ip => (
+                  <div key={ip} className="flex items-center justify-between bg-green-900/10 border border-green-700/30 rounded px-2 py-0.5">
+                    <span className="text-green-400">{ip}</span>
+                    <button
+                      onClick={() => setWhitelistedIps(prev => prev.filter(i => i !== ip))}
+                      className="text-red-400 hover:text-red-300 text-[8px]"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Banned IPs List */}
+          <div className="bg-slate-900 p-3 rounded border border-slate-700">
+            <div className="flex justify-between items-center mb-2">
+              <div className="text-[10px] font-bold text-slate-400 uppercase">Banned IPs ({bannedIps.length})</div>
+              <button
+                onClick={() => {
+                  setBannedIps([]);
+                  setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Cleared all bans`, ...prev].slice(0, 5));
+                }}
+                className="text-[8px] px-1.5 py-0.5 bg-red-900/20 text-red-400 rounded hover:bg-red-900/40"
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="max-h-32 overflow-y-auto text-[9px] font-mono space-y-1">
+              {bannedIps.length === 0 && <span className="text-slate-600 italic">No banned IPs</span>}
+              {bannedIps.map(ip => (
+                <div key={ip} className="flex items-center justify-between bg-red-900/10 border border-red-700/30 rounded px-2 py-0.5">
+                  <span className="text-red-400">{ip}</span>
                   <button
-                    onClick={() => setWhitelistedIps(prev => prev.filter(i => i !== ip))}
-                    className="text-red-400 hover:text-red-300 text-[8px]"
+                    onClick={() => setBannedIps(prev => prev.filter(i => i !== ip))}
+                    className="text-slate-400 hover:text-white text-[8px]"
                   >
-                    ×
+                    unban
                   </button>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Alerts Panel */}
+          <div className="flex-1 min-h-[100px] bg-black/40 rounded border border-slate-700/50 p-2 overflow-hidden flex flex-col">
+            <div className="text-[10px] text-slate-500 font-bold mb-1">RECENT ALERTS</div>
+            <div className="overflow-y-auto text-[10px] font-mono space-y-1 text-slate-300">
+              {alerts.length === 0 && <span className="text-slate-600 italic">System nominal...</span>}
+              {alerts.map((a, i) => <div key={i} className="border-l-2 border-red-500 pl-1">{a}</div>)}
+            </div>
+          </div>
+
         </div>
 
-        {/* Banned IPs List */}
-        <div className="bg-slate-900 p-3 rounded border border-slate-700">
-          <div className="flex justify-between items-center mb-2">
-            <div className="text-[10px] font-bold text-slate-400 uppercase">Banned IPs ({bannedIps.length})</div>
-            <button
-              onClick={() => {
-                setBannedIps([]);
-                setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Cleared all bans`, ...prev].slice(0, 5));
-              }}
-              className="text-[8px] px-1.5 py-0.5 bg-red-900/20 text-red-400 rounded hover:bg-red-900/40"
-            >
-              Clear All
-            </button>
-          </div>
-          <div className="max-h-32 overflow-y-auto text-[9px] font-mono space-y-1">
-            {bannedIps.length === 0 && <span className="text-slate-600 italic">No banned IPs</span>}
-            {bannedIps.map(ip => (
-              <div key={ip} className="flex items-center justify-between bg-red-900/10 border border-red-700/30 rounded px-2 py-0.5">
-                <span className="text-red-400">{ip}</span>
-                <button
-                  onClick={() => setBannedIps(prev => prev.filter(i => i !== ip))}
-                  className="text-slate-400 hover:text-white text-[8px]"
-                >
-                  unban
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Right: Main View */}
+        <div className="flex-1 flex flex-col bg-black min-h-[500px]">
 
-        {/* Alerts Panel */}
-        <div className="flex-1 min-h-[100px] bg-black/40 rounded border border-slate-700/50 p-2 overflow-hidden flex flex-col">
-          <div className="text-[10px] text-slate-500 font-bold mb-1">RECENT ALERTS</div>
-          <div className="overflow-y-auto text-[10px] font-mono space-y-1 text-slate-300">
-            {alerts.length === 0 && <span className="text-slate-600 italic">System nominal...</span>}
-            {alerts.map((a, i) => <div key={i} className="border-l-2 border-red-500 pl-1">{a}</div>)}
-          </div>
-        </div>
-
-      </div>
-
-      {/* Right: Main View */}
-      <div className="flex-1 flex flex-col bg-black min-h-[500px]">
-
-        {/* Top Bar */}
-        <div className="h-12 border-b border-slate-800 flex items-center px-4 justify-between bg-slate-900/50">
-          <div className="flex gap-6 text-xs font-mono">
-            <div>TOTAL: <span className="text-white">{stats.totalRequests}</span></div>
-            <div>BLOCKED: <span className="text-red-400">{stats.blockedRequests}</span></div>
-            <div>ALLOWED: <span className="text-green-400">{stats.allowedRequests}</span></div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="text-[10px] text-slate-500 uppercase font-bold">LIVE LOG STREAM</div>
-            <button onClick={clearLogs} className="px-1.5 h-5 flex items-center text-[9px] bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded transition-all">Clear</button>
-            <button onClick={resetSimulation} className="px-1.5 h-5 flex items-center text-[9px] bg-red-900/10 hover:bg-red-900/20 text-red-400/70 hover:text-red-400 rounded transition-all">Reset</button>
-          </div>
-        </div>
-
-        {/* Log Table */}
-        <div className="flex-1 overflow-hidden flex flex-col relative">
-          <div className="flex text-[10px] font-bold text-slate-500 border-b border-slate-800 bg-slate-900/30">
-            <div className="w-20 p-2">TIME</div>
-            <div className="w-32 p-2">SOURCE IP</div>
-            <div className="w-16 p-2">METHOD</div>
-            <div className="flex-1 p-2">PATH</div>
-            <div className="w-16 p-2 text-right">STATUS</div>
+          {/* Top Bar */}
+          <div className="h-12 border-b border-slate-800 flex items-center px-4 justify-between bg-slate-900/50">
+            <div className="flex gap-6 text-xs font-mono">
+              <div>TOTAL: <span className="text-white">{stats.totalRequests}</span></div>
+              <div>BLOCKED: <span className="text-red-400">{stats.blockedRequests}</span></div>
+              <div>ALLOWED: <span className="text-green-400">{stats.allowedRequests}</span></div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="text-[10px] text-slate-500 uppercase font-bold">LIVE LOG STREAM</div>
+              <button onClick={clearLogs} className="px-1.5 h-5 flex items-center text-[9px] bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded transition-all">Clear</button>
+              <button onClick={resetSimulation} className="px-1.5 h-5 flex items-center text-[9px] bg-red-900/10 hover:bg-red-900/20 text-red-400/70 hover:text-red-400 rounded transition-all">Reset</button>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto font-mono text-xs scrollbar-thin scrollbar-thumb-slate-700">
-            {events.map(e => (
-              <div
-                key={e.id}
-                className={`flex items-center border-b border-slate-900/50 hover:bg-slate-800/50 transition-colors cursor-pointer ${e.type === 'attack' ? 'text-red-400/80' :
+          {/* Log Table */}
+          <div className="flex-1 overflow-hidden flex flex-col relative">
+            <div className="flex text-[10px] font-bold text-slate-500 border-b border-slate-800 bg-slate-900/30">
+              <div className="w-20 p-2">TIME</div>
+              <div className="w-32 p-2">SOURCE IP</div>
+              <div className="w-16 p-2">METHOD</div>
+              <div className="flex-1 p-2">PATH</div>
+              <div className="w-16 p-2 text-right">STATUS</div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto font-mono text-xs scrollbar-thin scrollbar-thumb-slate-700">
+              {events.map(e => (
+                <div
+                  key={e.id}
+                  className={`flex items-center border-b border-slate-900/50 hover:bg-slate-800/50 transition-colors cursor-pointer ${e.type === 'attack' ? 'text-red-400/80' :
                     e.type === 'ban' ? 'text-purple-400 font-bold bg-purple-900/10' :
                       e.status >= 400 ? 'text-amber-400' : 'text-green-400'
-                  }`}
-                onClick={() => setSelectedIp(e.ip)}
-              >
-                <div className="w-20 p-2 text-slate-600">{new Date(e.ts).toLocaleTimeString().split(' ')[0]}</div>
-                <div className="w-32 p-2 font-bold">{e.ip}</div>
-                <div className="w-16 p-2 opacity-75">{e.method}</div>
-                <div className="flex-1 p-2 truncate opacity-90" title={e.ua}>{e.path}</div>
-                <div className="w-16 p-2 text-right font-bold">{e.status}</div>
-              </div>
-            ))}
-            {events.length === 0 && (
-              <div className="p-8 text-center text-slate-600">
-                Waiting for traffic... <br />
-                <span className="text-xs">Use controls on the left to generate load.</span>
-              </div>
-            )}
-          </div>
-
-          {/* IP Detail Modal (Overlay) */}
-          {selectedIp && (
-            <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-8 z-10">
-              <div className="bg-slate-800 border border-slate-600 rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
-                <div className="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
-                  <h3 className="font-bold text-white">IP Details: {selectedIp}</h3>
-                  <button onClick={() => setSelectedIp(null)} className="text-slate-400 hover:text-white">
-                    <X className="w-4 h-4" />
-                  </button>
+                    }`}
+                  onClick={() => setSelectedIp(e.ip)}
+                >
+                  <div className="w-20 p-2 text-slate-600">{new Date(e.ts).toLocaleTimeString().split(' ')[0]}</div>
+                  <div className="w-32 p-2 font-bold">{e.ip}</div>
+                  <div className="w-16 p-2 opacity-75">{e.method}</div>
+                  <div className="flex-1 p-2 truncate opacity-90" title={e.ua}>{e.path}</div>
+                  <div className="w-16 p-2 text-right font-bold">{e.status}</div>
                 </div>
-                <div className="p-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-900/50 p-3 rounded border border-slate-700">
-                      <div className="text-xs text-slate-500 uppercase">Total Requests</div>
-                      <div className="text-xl font-mono text-white">{ipHistoryRef.current[selectedIp]?.count || 0}</div>
-                    </div>
-                    <div className="bg-slate-900/50 p-3 rounded border border-slate-700">
-                      <div className="text-xs text-slate-500 uppercase">Status</div>
-                      <div className="text-xl font-mono">
-                        {bannedIps.includes(selectedIp) ? <span className="text-red-500">BANNED</span> : <span className="text-green-500">CLEAN</span>}
+              ))}
+              {events.length === 0 && (
+                <div className="p-8 text-center text-slate-600">
+                  Waiting for traffic... <br />
+                  <span className="text-xs">Use controls on the left to generate load.</span>
+                </div>
+              )}
+            </div>
+
+            {/* IP Detail Modal (Overlay) */}
+            {selectedIp && (
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-8 z-10">
+                <div className="bg-slate-800 border border-slate-600 rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
+                  <div className="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
+                    <h3 className="font-bold text-white">IP Details: {selectedIp}</h3>
+                    <button onClick={() => setSelectedIp(null)} className="text-slate-400 hover:text-white">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-slate-900/50 p-3 rounded border border-slate-700">
+                        <div className="text-xs text-slate-500 uppercase">Total Requests</div>
+                        <div className="text-xl font-mono text-white">{ipHistoryRef.current[selectedIp]?.count || 0}</div>
+                      </div>
+                      <div className="bg-slate-900/50 p-3 rounded border border-slate-700">
+                        <div className="text-xs text-slate-500 uppercase">Status</div>
+                        <div className="text-xl font-mono">
+                          {bannedIps.includes(selectedIp) ? <span className="text-red-500">BANNED</span> : <span className="text-green-500">CLEAN</span>}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <div className="text-xs text-slate-500 uppercase mb-2">Request History</div>
-                    <div className="h-32 bg-black rounded border border-slate-700 overflow-y-auto p-2 text-xs font-mono text-slate-300">
-                      {/* Filter events for this IP */}
-                      {events.filter(e => e.ip === selectedIp).map(e => (
-                        <div key={e.id} className="flex justify-between border-b border-slate-800 py-1">
-                          <span>{e.method} {e.path}</span>
-                          <span className={e.status >= 400 ? 'text-red-400' : 'text-green-400'}>{e.status}</span>
-                        </div>
-                      ))}
+                    <div>
+                      <div className="text-xs text-slate-500 uppercase mb-2">Request History</div>
+                      <div className="h-32 bg-black rounded border border-slate-700 overflow-y-auto p-2 text-xs font-mono text-slate-300">
+                        {/* Filter events for this IP */}
+                        {events.filter(e => e.ip === selectedIp).map(e => (
+                          <div key={e.id} className="flex justify-between border-b border-slate-800 py-1">
+                            <span>{e.method} {e.path}</span>
+                            <span className={e.status >= 400 ? 'text-red-400' : 'text-green-400'}>{e.status}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex gap-2 pt-2">
-                    {bannedIps.includes(selectedIp) ? (
-                      <button
-                        onClick={() => { setBannedIps(prev => prev.filter(x => x !== selectedIp)); setSelectedIp(null); }}
-                        className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded font-bold text-sm"
-                      >
-                        UNBAN IP
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => { banIp(selectedIp); setSelectedIp(null); }}
-                        className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded font-bold text-sm"
-                      >
-                        BAN IP NOW
-                      </button>
-                    )}
+                    <div className="flex gap-2 pt-2">
+                      {bannedIps.includes(selectedIp) ? (
+                        <button
+                          onClick={() => { setBannedIps(prev => prev.filter(x => x !== selectedIp)); setSelectedIp(null); }}
+                          className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded font-bold text-sm"
+                        >
+                          UNBAN IP
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => { banIp(selectedIp); setSelectedIp(null); }}
+                          className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded font-bold text-sm"
+                        >
+                          BAN IP NOW
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
+          </div>
+
+          {/* Live Graphs Section */}
+          <LiveGraphs
+            rpsHistory={rpsHistory}
+            udpHistory={udpHistory}
+            tcpHistory={tcpHistory}
+            totalRequests={stats.totalRequests}
+            blockedRequests={stats.blockedRequests}
+            allowedRequests={stats.allowedRequests}
+            bannedIpsCount={bannedIps.length}
+          />
         </div>
-
-        {/* Live Graphs Section */}
-        <LiveGraphs
-          rpsHistory={rpsHistory}
-          udpHistory={udpHistory}
-          tcpHistory={tcpHistory}
-          totalRequests={stats.totalRequests}
-          blockedRequests={stats.blockedRequests}
-          allowedRequests={stats.allowedRequests}
-          bannedIpsCount={bannedIps.length}
-        />
       </div>
-    </div>
     </div>
   );
 };
