@@ -7,7 +7,7 @@ I worked with an AI to create a demo and explanation page showing how to impleme
   - Attack detection and mitigation examples
   - Attack simulation tools
   - A management interface styled similarly to txAdmin
-- Note: This is an early-stage demo — more work is required to make it production-ready, but it's a great starting point.
+- Note: This is an early-stage demo - more work is required to make it production-ready, but it's a great starting point.
 
 Simulation UI source code (can be converted to a real interface when your Nginx filter runs):
 - GitHub repo: https://github.com/burgil/fivem-nginx-filter

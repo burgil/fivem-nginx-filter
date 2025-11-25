@@ -50,6 +50,65 @@ export default function FiveMFilterGuide() {
               A production-ready implementation guide for deploying NGINX as a Layer 7 shield. 
               Filter bad packets, rate-limit connections, and ban attackers automatically before they crash your FXServer.
             </p>
+            
+            {/* Benefits Grid */}
+            <div className="grid md:grid-cols-3 gap-4 mb-8 text-left">
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
+                <div className="text-blue-400 font-bold mb-2 flex items-center gap-2">
+                  <span>⚡</span> Crash Prevention
+                </div>
+                <p className="text-xs text-slate-400">
+                  Stop HTTP floods, UDP packet storms, and SYN attacks <strong>before</strong> they reach FXServer. 
+                  Your server stays responsive even under 10,000+ req/s attacks.
+                </p>
+              </div>
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
+                <div className="text-purple-400 font-bold mb-2 flex items-center gap-2">
+                  <span>🎯</span> Smart Rate Limiting
+                </div>
+                <p className="text-xs text-slate-400">
+                  Token-bucket algorithm with configurable limits per second/minute/burst. 
+                  Legitimate players never hit limits, attackers get <code>503</code> instantly.
+                </p>
+              </div>
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
+                <div className="text-green-400 font-bold mb-2 flex items-center gap-2">
+                  <span>🔒</span> Auto-Ban & Whitelist
+                </div>
+                <p className="text-xs text-slate-400">
+                  Node.js watcher auto-bans IPs via <code>iptables</code> based on attack patterns. 
+                  Whitelist trusted IPs, track request history per IP.
+                </p>
+              </div>
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
+                <div className="text-amber-400 font-bold mb-2 flex items-center gap-2">
+                  <span>📊</span> Real-Time Monitoring
+                </div>
+                <p className="text-xs text-slate-400">
+                  Live RPS graphs, attack distribution charts, banned IP lists. 
+                  See exactly who's hitting your server and what they're requesting.
+                </p>
+              </div>
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
+                <div className="text-red-400 font-bold mb-2 flex items-center gap-2">
+                  <span>🚀</span> Layer 4 + Layer 7
+                </div>
+                <p className="text-xs text-slate-400">
+                  HTTP proxy <strong>and</strong> UDP stream proxy. 
+                  Filter both web requests and game packets with a single NGINX instance.
+                </p>
+              </div>
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
+                <div className="text-cyan-400 font-bold mb-2 flex items-center gap-2">
+                  <span>🎮</span> DDoS Simulation
+                </div>
+                <p className="text-xs text-slate-400">
+                  Interactive dashboard lets you test UDP floods, TCP SYN attacks, HTTP spam. 
+                  See how filters respond in real-time without risking your live server.
+                </p>
+              </div>
+            </div>
+            
             <div className="flex justify-center gap-4">
               <button onClick={() => scrollToSection('simulation')} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-lg shadow-blue-500/20">
                 Try Interactive Demo

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TrafficGraph } from './TrafficGraph';
+import { LiveGraphs } from './LiveGraphs';
 
 // --- Types ---
 interface SimEvent {
@@ -26,6 +27,7 @@ interface IpHistory {
     count: number;
     lastSeen: number;
     statusCodes: { [code: number]: number };
+    timestamps: number[]; // Track request timestamps for windowed rate limiting
   };
 }
 
@@ -47,6 +49,7 @@ export const SimulationDashboard: React.FC = () => {
     rps: 0,
   });
   const [bannedIps, setBannedIps] = useState<string[]>([]);
+  const [whitelistedIps, setWhitelistedIps] = useState<string[]>(['192.168.0.1']);
   const [isAttacking, setIsAttacking] = useState(false);
   const [playerCount, setPlayerCount] = useState(0);
   const [autoBanEnabled, setAutoBanEnabled] = useState(true);
@@ -55,16 +58,47 @@ export const SimulationDashboard: React.FC = () => {
   const [rpsHistory, setRpsHistory] = useState<number[]>(new Array(30).fill(0));
   const [udpPacketRate, setUdpPacketRate] = useState(0);
   const [tcpPacketRate, setTcpPacketRate] = useState(0);
+  const [rateLimitPerSecond, setRateLimitPerSecond] = useState(10);
+  const [rateLimitPer10Sec, setRateLimitPer10Sec] = useState(50);
+  const [rateLimitPerMinute, setRateLimitPerMinute] = useState(200);
+  const [burstAllowance, setBurstAllowance] = useState(20);
+  const [isUdpFlooding, setIsUdpFlooding] = useState(false);
+  const [isTcpFlooding, setIsTcpFlooding] = useState(false);
   
   // Refs
   const eventIdRef = useRef(0);
   const statsRef = useRef(stats);
   const bannedRef = useRef(bannedIps);
+  const whitelistedRef = useRef(whitelistedIps);
   const ipHistoryRef = useRef<IpHistory>({});
   
   // Sync refs
   useEffect(() => { statsRef.current = stats; }, [stats]);
   useEffect(() => { bannedRef.current = bannedIps; }, [bannedIps]);
+  useEffect(() => { whitelistedRef.current = whitelistedIps; }, [whitelistedIps]);
+
+  // --- Helper: Check if IP exceeds rate limits ---
+  const checkRateLimitViolation = useCallback((ip: string): { violated: boolean; reason: string } => {
+    const ipData = ipHistoryRef.current[ip];
+    if (!ipData || !ipData.timestamps.length) return { violated: false, reason: '' };
+    
+    const now = Date.now();
+    const last1s = ipData.timestamps.filter(t => t > now - 1000).length;
+    const last10s = ipData.timestamps.filter(t => t > now - 10000).length;
+    const last60s = ipData.timestamps.filter(t => t > now - 60000).length;
+    
+    if (last1s > rateLimitPerSecond) {
+      return { violated: true, reason: `${last1s} req/s (limit: ${rateLimitPerSecond})` };
+    }
+    if (last10s > rateLimitPer10Sec) {
+      return { violated: true, reason: `${last10s} req/10s (limit: ${rateLimitPer10Sec})` };
+    }
+    if (last60s > rateLimitPerMinute) {
+      return { violated: true, reason: `${last60s} req/min (limit: ${rateLimitPerMinute})` };
+    }
+    
+    return { violated: false, reason: '' };
+  }, [rateLimitPerSecond, rateLimitPer10Sec, rateLimitPerMinute]);
 
   // --- Simulation Logic ---
   const addEvent = useCallback((partial: Partial<SimEvent>) => {
@@ -90,14 +124,19 @@ export const SimulationDashboard: React.FC = () => {
       allowedRequests: prev.allowedRequests + (evt.status === 200 ? 1 : 0),
     }));
 
-    // Update IP History
+    // Update IP History with windowed tracking
     if (!ipHistoryRef.current[evt.ip]) {
-      ipHistoryRef.current[evt.ip] = { count: 0, lastSeen: 0, statusCodes: {} };
+      ipHistoryRef.current[evt.ip] = { count: 0, lastSeen: 0, statusCodes: {}, timestamps: [] };
     }
     const ipData = ipHistoryRef.current[evt.ip];
     ipData.count++;
     ipData.lastSeen = Date.now();
     ipData.statusCodes[evt.status] = (ipData.statusCodes[evt.status] || 0) + 1;
+    ipData.timestamps.push(Date.now());
+    
+    // Keep only last 60 seconds of timestamps
+    const cutoff = Date.now() - 60000;
+    ipData.timestamps = ipData.timestamps.filter(t => t > cutoff);
 
     return evt;
   }, []);
@@ -134,13 +173,20 @@ export const SimulationDashboard: React.FC = () => {
         const attackRate = 15; 
         for (let i = 0; i < attackRate; i++) {
           const ip = randomIp();
+          const isWhitelisted = whitelistedRef.current.includes(ip);
           const isBanned = bannedRef.current.includes(ip);
           
-          if (autoBanEnabled && !isBanned && Math.random() > 0.7) {
-             setBannedIps(prev => [...prev, ip]);
-             addEvent({ ip, type: 'ban', status: 403, path: 'FIREWALL_BLOCK', method: 'BAN' });
-             setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Auto-banned ${ip} for flood pattern`, ...prev].slice(0, 5));
-             continue;
+          if (isWhitelisted) continue; // Skip whitelisted IPs
+          
+          // Check rate limit violations for auto-ban
+          if (autoBanEnabled && !isBanned) {
+            const rateCheck = checkRateLimitViolation(ip);
+            if (rateCheck.violated) {
+              setBannedIps(prev => [...prev, ip]);
+              addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
+              setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - ${rateCheck.reason}`, ...prev].slice(0, 5));
+              continue;
+            }
           }
 
           if (isBanned) {
@@ -152,24 +198,75 @@ export const SimulationDashboard: React.FC = () => {
           }
         }
       }
+
+      // 3. UDP Flood Simulation
+      if (isUdpFlooding) {
+        const floodIps = Array.from({ length: 20 }, () => randomIp());
+        floodIps.forEach(ip => {
+          const isWhitelisted = whitelistedRef.current.includes(ip);
+          const isBanned = bannedRef.current.includes(ip);
+          if (isWhitelisted) return;
+          
+          if (autoBanEnabled && !isBanned) {
+            const rateCheck = checkRateLimitViolation(ip);
+            if (rateCheck.violated) {
+              setBannedIps(prev => [...prev, ip]);
+              addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
+              setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - UDP flood ${rateCheck.reason}`, ...prev].slice(0, 5));
+              return;
+            }
+          }
+          
+          if (!isBanned) {
+            addEvent({ ip, path: 'UDP:30120', method: 'FLOOD', status: 444, type: 'attack', ua: 'UDP_PACKET' });
+          }
+        });
+      }
+
+      // 4. TCP SYN Flood Simulation
+      if (isTcpFlooding) {
+        const synIps = Array.from({ length: 10 }, () => randomIp());
+        synIps.forEach(ip => {
+          const isWhitelisted = whitelistedRef.current.includes(ip);
+          const isBanned = bannedRef.current.includes(ip);
+          if (isWhitelisted) return;
+          
+          if (autoBanEnabled && !isBanned) {
+            const rateCheck = checkRateLimitViolation(ip);
+            if (rateCheck.violated) {
+              setBannedIps(prev => [...prev, ip]);
+              addEvent({ ip, type: 'ban', status: 403, path: 'IPTABLES_DROP', method: 'BAN' });
+              setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Banned ${ip} - SYN flood ${rateCheck.reason}`, ...prev].slice(0, 5));
+              return;
+            }
+          }
+          
+          if (!isBanned) {
+            addEvent({ ip, path: 'TCP:30120', method: 'SYN', status: 444, type: 'attack', ua: 'TCP_SYN' });
+          }
+        });
+      }
       
       // Update RPS Graph every second (approx 5 ticks)
       if (tickCount % 5 === 0) {
-        const currentRps = Math.floor(Math.random() * (playerCount + (isAttacking ? 100 : 0))); // Simulated RPS variation
+        const baseRps = playerCount + (isAttacking ? 100 : 0);
+        const udpRps = isUdpFlooding ? 200 : 0;
+        const tcpRps = isTcpFlooding ? 100 : 0;
+        const currentRps = baseRps + udpRps + tcpRps + Math.floor(Math.random() * 50);
         setStats(prev => ({ ...prev, rps: currentRps }));
         setRpsHistory(prev => [...prev.slice(1), currentRps]);
         
         // Simulate UDP/TCP packet rates
-        const baseUdp = playerCount * 20; // Each player generates ~20 UDP packets/sec
-        const baseTcp = playerCount * 2;  // Each player generates ~2 TCP packets/sec
-        setUdpPacketRate(baseUdp + (isAttacking ? Math.floor(Math.random() * 500) : 0));
-        setTcpPacketRate(baseTcp + (isAttacking ? Math.floor(Math.random() * 50) : 0));
+        const baseUdp = playerCount * 20;
+        const baseTcp = playerCount * 2;
+        setUdpPacketRate(baseUdp + (isAttacking ? Math.floor(Math.random() * 500) : 0) + (isUdpFlooding ? 5000 : 0));
+        setTcpPacketRate(baseTcp + (isAttacking ? Math.floor(Math.random() * 50) : 0) + (isTcpFlooding ? 2000 : 0));
       }
 
     }, 200); 
 
     return () => clearInterval(interval);
-  }, [playerCount, isAttacking, autoBanEnabled, addEvent]);
+  }, [playerCount, isAttacking, autoBanEnabled, isUdpFlooding, isTcpFlooding, addEvent, checkRateLimitViolation]);
 
 
   // --- Handlers ---
@@ -190,6 +287,10 @@ export const SimulationDashboard: React.FC = () => {
     ipHistoryRef.current = {};
     setPlayerCount(0);
     setIsAttacking(false);
+    setIsUdpFlooding(false);
+    setIsTcpFlooding(false);
+    setUdpPacketRate(0);
+    setTcpPacketRate(0);
   };
 
   const clearLogs = () => {
@@ -307,16 +408,38 @@ export const SimulationDashboard: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-2">
                 <button 
-                onClick={() => { /* Simulate UDP flood */ setUdpPacketRate(prev => prev + 1000); setTimeout(() => setUdpPacketRate(prev => Math.max(0, prev - 1000)), 2000); }}
-                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-blue-600/20 text-blue-400 border border-blue-600/50 hover:border-blue-500 hover:bg-blue-600/30 transition-all"
+                onClick={() => {
+                  setIsUdpFlooding(!isUdpFlooding);
+                  if (!isUdpFlooding) {
+                    setAlerts(prev => [`[${new Date().toLocaleTimeString()}] UDP Flood started - 5000+ pps`, ...prev].slice(0, 5));
+                  } else {
+                    setAlerts(prev => [`[${new Date().toLocaleTimeString()}] UDP Flood stopped`, ...prev].slice(0, 5));
+                  }
+                }}
+                className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all ${
+                  isUdpFlooding 
+                    ? 'bg-blue-600 text-white border border-blue-400 animate-pulse' 
+                    : 'bg-blue-600/20 text-blue-400 border border-blue-600/50 hover:border-blue-500 hover:bg-blue-600/30'
+                }`}
                 >
-                📡 UDP FLOOD
+                {isUdpFlooding ? '🛑 STOP UDP' : '📡 UDP FLOOD'}
                 </button>
                 <button 
-                onClick={() => { /* Simulate TCP SYN */ setTcpPacketRate(prev => prev + 500); setTimeout(() => setTcpPacketRate(prev => Math.max(0, prev - 500)), 2000); }}
-                className="w-full py-2 px-2 rounded font-bold text-[10px] bg-purple-600/20 text-purple-400 border border-purple-600/50 hover:border-purple-500 hover:bg-purple-600/30 transition-all"
+                onClick={() => {
+                  setIsTcpFlooding(!isTcpFlooding);
+                  if (!isTcpFlooding) {
+                    setAlerts(prev => [`[${new Date().toLocaleTimeString()}] TCP SYN Flood started - 2000+ cps`, ...prev].slice(0, 5));
+                  } else {
+                    setAlerts(prev => [`[${new Date().toLocaleTimeString()}] TCP SYN Flood stopped`, ...prev].slice(0, 5));
+                  }
+                }}
+                className={`w-full py-2 px-2 rounded font-bold text-[10px] transition-all ${
+                  isTcpFlooding 
+                    ? 'bg-purple-600 text-white border border-purple-400 animate-pulse' 
+                    : 'bg-purple-600/20 text-purple-400 border border-purple-600/50 hover:border-purple-500 hover:bg-purple-600/30'
+                }`}
                 >
-                🔌 TCP SYN
+                {isTcpFlooding ? '🛑 STOP TCP' : '🔌 TCP SYN'}
                 </button>
             </div>
           </div>
@@ -331,6 +454,145 @@ export const SimulationDashboard: React.FC = () => {
           >
             <span className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform ${autoBanEnabled ? 'translate-x-4' : ''}`} />
           </button>
+        </div>
+
+        {/* Rate Limit Configuration */}
+        <div className="bg-slate-900 p-3 rounded border border-slate-700 space-y-2">
+          <div className="text-[10px] font-bold text-amber-400 uppercase mb-2 flex items-center gap-1">
+            <span>⚙️</span> Advanced Rate Limits
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[9px] font-bold text-slate-400">Per Second</span>
+              <span className="text-[10px] font-mono text-blue-400">{rateLimitPerSecond} req/s</span>
+            </div>
+            <input 
+              type="range" 
+              min="5" 
+              max="100" 
+              value={rateLimitPerSecond} 
+              onChange={(e) => setRateLimitPerSecond(parseInt(e.target.value))}
+              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            />
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[9px] font-bold text-slate-400">Per 10 Seconds</span>
+              <span className="text-[10px] font-mono text-purple-400">{rateLimitPer10Sec} req/10s</span>
+            </div>
+            <input 
+              type="range" 
+              min="20" 
+              max="300" 
+              step="10"
+              value={rateLimitPer10Sec} 
+              onChange={(e) => setRateLimitPer10Sec(parseInt(e.target.value))}
+              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+            />
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[9px] font-bold text-slate-400">Per Minute</span>
+              <span className="text-[10px] font-mono text-green-400">{rateLimitPerMinute} req/min</span>
+            </div>
+            <input 
+              type="range" 
+              min="50" 
+              max="1000" 
+              step="50"
+              value={rateLimitPerMinute} 
+              onChange={(e) => setRateLimitPerMinute(parseInt(e.target.value))}
+              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+            />
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[9px] font-bold text-slate-400">Burst Allowance</span>
+              <span className="text-[10px] font-mono text-amber-400">{burstAllowance} burst</span>
+            </div>
+            <input 
+              type="range" 
+              min="5" 
+              max="100" 
+              step="5"
+              value={burstAllowance} 
+              onChange={(e) => setBurstAllowance(parseInt(e.target.value))}
+              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+            />
+          </div>
+          <div className="text-[8px] text-slate-500 pt-1 border-t border-slate-800">
+            Auto-ban triggers when any limit is exceeded
+          </div>
+        </div>
+
+        {/* IP Management */}
+        <div className="bg-slate-900 p-3 rounded border border-slate-700">
+          <div className="text-[10px] font-bold text-slate-400 uppercase mb-2">IP Management</div>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                placeholder="192.168.x.x" 
+                className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[10px] text-white focus:outline-none focus:border-blue-500"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.currentTarget.value) {
+                    const ip = e.currentTarget.value;
+                    if (!whitelistedIps.includes(ip)) {
+                      setWhitelistedIps(prev => [...prev, ip]);
+                      setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Whitelisted ${ip}`, ...prev].slice(0, 5));
+                    }
+                    e.currentTarget.value = '';
+                  }
+                }}
+              />
+              <button className="px-2 py-1 bg-green-600/20 text-green-400 border border-green-600/50 rounded text-[9px] font-bold hover:bg-green-600/30">
+                + WL
+              </button>
+            </div>
+            <div className="max-h-20 overflow-y-auto text-[9px] font-mono space-y-1">
+              {whitelistedIps.map(ip => (
+                <div key={ip} className="flex items-center justify-between bg-green-900/10 border border-green-700/30 rounded px-2 py-0.5">
+                  <span className="text-green-400">{ip}</span>
+                  <button 
+                    onClick={() => setWhitelistedIps(prev => prev.filter(i => i !== ip))}
+                    className="text-red-400 hover:text-red-300 text-[8px]"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Banned IPs List */}
+        <div className="bg-slate-900 p-3 rounded border border-slate-700">
+          <div className="flex justify-between items-center mb-2">
+            <div className="text-[10px] font-bold text-slate-400 uppercase">Banned IPs ({bannedIps.length})</div>
+            <button 
+              onClick={() => {
+                setBannedIps([]);
+                setAlerts(prev => [`[${new Date().toLocaleTimeString()}] Cleared all bans`, ...prev].slice(0, 5));
+              }}
+              className="text-[8px] px-1.5 py-0.5 bg-red-900/20 text-red-400 rounded hover:bg-red-900/40"
+            >
+              Clear All
+            </button>
+          </div>
+          <div className="max-h-32 overflow-y-auto text-[9px] font-mono space-y-1">
+            {bannedIps.length === 0 && <span className="text-slate-600 italic">No banned IPs</span>}
+            {bannedIps.map(ip => (
+              <div key={ip} className="flex items-center justify-between bg-red-900/10 border border-red-700/30 rounded px-2 py-0.5">
+                <span className="text-red-400">{ip}</span>
+                <button 
+                  onClick={() => setBannedIps(prev => prev.filter(i => i !== ip))}
+                  className="text-slate-400 hover:text-white text-[8px]"
+                >
+                  unban
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Alerts Panel */}
@@ -356,8 +618,8 @@ export const SimulationDashboard: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <div className="text-[10px] text-slate-500 uppercase font-bold">LIVE LOG STREAM</div>
-            <button onClick={clearLogs} className="px-2 py-0.5 text-[9px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-600 rounded transition-all">CLEAR</button>
-            <button onClick={resetSimulation} className="px-2 py-0.5 text-[9px] font-bold bg-red-900/30 hover:bg-red-900/50 text-red-400 hover:text-red-300 border border-red-700/50 hover:border-red-600 rounded transition-all">RESET</button>
+            <button onClick={clearLogs} className="px-1.5 h-5 flex items-center text-[9px] bg-slate-700/30 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded transition-all">Clear</button>
+            <button onClick={resetSimulation} className="px-1.5 h-5 flex items-center text-[9px] bg-red-900/10 hover:bg-red-900/20 text-red-400/70 hover:text-red-400 rounded transition-all">Reset</button>
           </div>
         </div>
 
@@ -455,6 +717,15 @@ export const SimulationDashboard: React.FC = () => {
           )}
 
         </div>
+
+        {/* Live Graphs Section */}
+        <LiveGraphs 
+          rpsHistory={rpsHistory}
+          totalRequests={stats.totalRequests}
+          blockedRequests={stats.blockedRequests}
+          allowedRequests={stats.allowedRequests}
+          bannedIpsCount={bannedIps.length}
+        />
       </div>
     </div>
   );

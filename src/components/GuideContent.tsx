@@ -6,6 +6,56 @@ export const GuideContent: React.FC = () => {
     <div className="space-y-16 text-slate-300">
       
       {/* ========================================
+          TABLE OF CONTENTS
+      ======================================== */}
+      <section className="bg-slate-800/30 border border-slate-700 rounded-xl p-6 sticky top-20 z-10 backdrop-blur-sm">
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+          <span className="text-blue-500">📋</span> Table of Contents
+        </h2>
+        <div className="grid md:grid-cols-2 gap-x-8 gap-y-2">
+          <a href="#intro" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> Why NGINX Filtering?
+          </a>
+          <a href="#simulation" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> Interactive Simulator
+          </a>
+          <a href="#prerequisites" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> Prerequisites
+          </a>
+          <a href="#installation" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> Installation
+          </a>
+          <a href="#nginx-config" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> NGINX HTTP Config
+          </a>
+          <a href="#udp-proxy" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> NGINX UDP Proxy
+          </a>
+          <a href="#server-config" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> FiveM Server Config
+          </a>
+          <a href="#watcher-service" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> Node.js Log Watcher
+          </a>
+          <a href="#log-parser" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> Log Parser & Stats API
+          </a>
+          <a href="#bonuses" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> Real-Time Dashboard & Graphs
+          </a>
+          <a href="#troubleshooting" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-2 transition-colors">
+            <span className="text-slate-600">→</span> Troubleshooting
+          </a>
+        </div>
+        <div className="mt-4 pt-4 border-t border-slate-700">
+          <p className="text-xs text-slate-400">
+            <strong className="text-slate-300">Quick Start:</strong> New to NGINX filtering? Start with <a href="#intro" className="text-blue-400 hover:underline">Why NGINX Filtering?</a>, 
+            try the <a href="#simulator" className="text-blue-400 hover:underline">Interactive Simulator</a>, then follow the setup guides in order.
+          </p>
+        </div>
+      </section>
+
+      {/* ========================================
           SECTION 1: WHY NGINX FILTERING?
       ======================================== */}
       <section id="intro" className="scroll-mt-24">
@@ -15,60 +65,86 @@ export const GuideContent: React.FC = () => {
         
         {/* The Problem */}
         <div className="bg-red-900/10 border-l-4 border-red-500 p-6 rounded-r-lg mb-8">
-          <h3 className="text-xl font-bold text-red-400 mb-3">The Problem</h3>
+          <h3 className="text-xl font-bold text-red-400 mb-3">The Problem: Why FiveM Servers Are Vulnerable</h3>
           <p className="text-slate-300 leading-relaxed mb-3">
-            FiveM servers are <strong>prime targets for attacks</strong>. Why? Because they run on Windows, expose HTTP endpoints for server lists (`/info.json`, `/players.json`), and handle UDP game traffic simultaneously. A single coordinated attack can:
+            FiveM servers are <strong>prime targets for Layer 7 (Application Layer) and Layer 4 (Transport Layer) attacks</strong>. 
+            The architecture exposes multiple attack vectors:
           </p>
           <ul className="list-disc list-inside space-y-2 text-slate-400">
-            <li>Overwhelm your HTTP endpoints causing FXServer to <strong>hang</strong></li>
-            <li>Flood UDP ports making gameplay <strong>unplayable</strong> (high ping, timeouts)</li>
-            <li>Expose your actual server IP even if you use a proxy (if misconfigured)</li>
-            <li>Drain your server resources with malicious requests (<code>/wp-login.php</code>, path traversal attempts, etc.)</li>
+            <li><strong>HTTP Endpoints (Layer 7):</strong> The server list queries <code>/info.json</code>, <code>/players.json</code>, and <code>/dynamic.json</code> every few seconds. A flood of requests to these endpoints can exhaust FXServer's HTTP handler, causing it to <strong>hang or crash</strong>, even with <code>sv_requestParanoia</code> enabled.</li>
+            <li><strong>UDP Game Traffic (Layer 4):</strong> FiveM uses UDP on port 30120 for game data (player movements, voice, syncing). A UDP flood can saturate bandwidth, causing <strong>packet loss, timeouts, and unplayable lag</strong>.</li>
+            <li><strong>TCP Handshake Attacks (SYN Flood):</strong> Attackers can exhaust your connection table with half-open TCP connections, preventing legitimate players from joining.</li>
+            <li><strong>IP Exposure:</strong> If misconfigured, your real server IP leaks through DNS, server list metadata, or direct connection attempts, allowing attackers to bypass any proxy.</li>
+            <li><strong>Resource Exhaustion:</strong> Malicious requests to non-existent paths (<code>/wp-login.php</code>, <code>/.env</code>) consume CPU and memory, degrading server performance.</li>
           </ul>
+          <div className="bg-red-800/20 p-3 rounded mt-4">
+            <p className="text-sm text-red-200">
+              <strong>Reality Check:</strong> Even with <code>sv_requestParanoia 3</code>, FiveM's built-in protections are reactive and limited. 
+              By the time FXServer detects abuse, hundreds of malicious requests have already hit your server. 
+              <strong>You need upstream filtering to stop attacks before they reach FXServer.</strong>
+            </p>
+          </div>
         </div>
 
         {/* The Solution */}
         <div className="bg-blue-900/10 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">The "Blast Shield" Solution</h3>
+          <h3 className="text-xl font-bold text-blue-400 mb-3">The "Blast Shield" Solution: NGINX Reverse Proxy Architecture</h3>
           <p className="text-slate-300 leading-relaxed mb-4">
-            Deploy a <strong>Linux NGINX proxy</strong> in front of your Windows FiveM server. This proxy acts as a "Blast Shield" by:
+            Deploy a <strong>Linux NGINX proxy</strong> as an upstream filter in front of your Windows FiveM server. 
+            This creates a <strong>defense-in-depth architecture</strong> where NGINX handles Layer 7 filtering, rate limiting, and connection management 
+            <em>before</em> traffic reaches FXServer. Think of it as a dedicated firewall + load balancer + traffic analyzer combined.
           </p>
           <div className="grid md:grid-cols-2 gap-4 mb-4">
             <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
               <div className="text-blue-400 font-bold mb-2 flex items-center gap-2">
-                <span>🛡️</span> Layer 7 Filtering
+                <span>🛡️</span> Layer 7 (HTTP) Filtering
               </div>
               <p className="text-xs text-slate-400">
-                Inspect HTTP headers, User-Agents, request paths. Block suspicious patterns <strong>before</strong> they reach your game server.
+                Inspect HTTP headers, User-Agents, request paths, query strings. Use <code>map</code> directives to blacklist/whitelist patterns. 
+                Block scrapers, bots, and exploit attempts (<code>/wp-admin</code>, <code>/.env</code>) at the proxy level.
+                <strong className="text-blue-300"> Attacker requests never reach FXServer.</strong>
               </p>
             </div>
             <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
               <div className="text-purple-400 font-bold mb-2 flex items-center gap-2">
-                <span>⚡</span> Rate Limiting
+                <span>⚡</span> Token Bucket Rate Limiting
               </div>
               <p className="text-xs text-slate-400">
-                Enforce strict request-per-second limits per IP. Legitimate players won't hit these limits, attackers will.
+                Use <code>limit_req_zone</code> with burst buffers to enforce per-IP limits. Example: 5 req/s for <code>/info.json</code>, 10 req/s globally. 
+                Legitimate players generate ~2-3 req/s. Attackers trying 100+ req/s hit the limit instantly and get <code>503 Service Unavailable</code>.
               </p>
             </div>
             <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
               <div className="text-green-400 font-bold mb-2 flex items-center gap-2">
-                <span>🔒</span> IP Hiding
+                <span>🔒</span> Network Isolation (Different Subnet)
               </div>
               <p className="text-xs text-slate-400">
-                Your Windows server sits on a <strong>private subnet</strong> (10.0.0.x). Only the proxy can reach it. Attackers only see the proxy IP.
+                Your Windows server lives on a <strong>private subnet</strong> (10.0.0.0/24). The proxy has dual interfaces: one public (1.2.3.4), one private (10.0.0.1). 
+                Attackers scanning your public IP range won't find the game server. <strong>No VPN needed - just a different subnet from your hosting provider.</strong>
               </p>
             </div>
             <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
               <div className="text-amber-400 font-bold mb-2 flex items-center gap-2">
-                <span>📊</span> Real-Time Monitoring
+                <span>📊</span> Real-Time Monitoring & Auto-Ban
               </div>
               <p className="text-xs text-slate-400">
-                Use a Node.js "Watcher" to tail NGINX logs and auto-ban malicious IPs via iptables. Build dashboards to visualize traffic.
+                A Node.js "Watcher" tails NGINX access logs, detects attack patterns (e.g., {'>'}100 requests with {'>'}70% blocked), and auto-bans via <code>iptables</code>. 
+                Exposes JSON API for building dashboards with <strong>live RPS graphs, IP history, ban lists, and alert feeds</strong>.
               </p>
             </div>
           </div>
-          <p className="text-sm text-slate-400 italic">
-            <strong>Result:</strong> A "clean pipe" where only valid game traffic reaches your FXServer, preventing crashes and maintaining performance.
+          <div className="bg-blue-800/20 p-4 rounded">
+            <h4 className="font-bold text-white mb-2">How This Stops Attacks:</h4>
+            <ul className="text-sm text-slate-300 space-y-1">
+              <li>• <strong>HTTP Floods:</strong> Rate limiter drops excess requests. Attacker sees 503 errors, FXServer stays responsive.</li>
+              <li>• <strong>UDP Floods:</strong> NGINX <code>stream</code> module proxies UDP with connection tracking. Malicious IPs get banned by watcher.</li>
+              <li>• <strong>SYN Floods:</strong> Linux kernel handles TCP better than Windows. NGINX absorbs SYN floods with <code>tcp_syncookies</code>.</li>
+              <li>• <strong>IP Scanning:</strong> Private subnet means attackers can't find your game server even if they know your public proxy IP.</li>
+            </ul>
+          </div>
+          <p className="text-sm text-slate-400 italic mt-4">
+            <strong>Result:</strong> A "clean pipe" architecture where only valid, rate-limited traffic reaches FXServer. 
+            Your server crashes less, runs faster, and can handle larger player counts without performance degradation.
           </p>
         </div>
 
@@ -85,7 +161,7 @@ export const GuideContent: React.FC = () => {
             <li className="flex items-start gap-3">
               <span className="text-green-500 font-bold">✓</span>
               <div>
-                <strong>Prevents IP Leakage:</strong> By using private networking (VLAN/VPN), attackers can't discover your game server's real IP.
+                <strong>Prevents IP Leakage:</strong> By using a private subnet, attackers can't discover your game server's real IP.
               </div>
             </li>
             <li className="flex items-start gap-3">
@@ -160,7 +236,7 @@ export const GuideContent: React.FC = () => {
 │  • Software: NGINX + Node.js Watcher        │
 └────────┬────────────────────────────────────┘
          │
-         │ Private Network (VLAN/VPN/Wireguard)
+         │ Private Subnet (10.0.0.0/24)
          │ 10.0.0.0/24
          ▼
 ┌─────────────────────────────────────────────┐
@@ -177,8 +253,8 @@ export const GuideContent: React.FC = () => {
             <p className="text-sm text-slate-400">
               <strong>Do NOT</strong> put both servers on the same public subnet. If your proxy is <code>1.2.3.4</code>, 
               don't make your game server <code>1.2.3.5</code> – attackers will scan adjacent IPs.
-              Use a provider that offers <strong>private VLANs</strong> (OVH vRack, Hetzner Cloud Private Networks) 
-              or set up a WireGuard tunnel between the boxes.
+              Instead, <strong>request a private subnet from your hosting provider</strong> (most offer this for free). 
+              Popular options: OVH vRack, Hetzner Cloud Private Networks, or simply ask your provider for a second IP on a different subnet.
             </p>
           </div>
         </div>
@@ -949,19 +1025,149 @@ sudo mv maxmind.dat GeoIP.dat`}
           {/* Dashboard */}
           <div className="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-              <span>📈</span> Build a Real Dashboard
+              <span>📈</span> Build a Real Dashboard with Graphs
             </h3>
-            <p className="text-sm text-slate-400 mb-3">
-              The watcher API returns JSON. You can build a web dashboard (React/Vue) to visualize:
+            <p className="text-sm text-slate-400 mb-4">
+              The watcher API returns JSON. Here's how to build a professional admin dashboard with real-time graphs:
             </p>
-            <ul className="text-sm text-slate-400 space-y-1 ml-4 list-disc">
-              <li>Requests per second (RPS) graph</li>
-              <li>Top attacking IPs (with ban buttons)</li>
-              <li>Live log stream (WebSocket)</li>
-              <li>Status code distribution pie chart</li>
-            </ul>
-            <p className="text-sm text-slate-500 mt-3 italic">
-              The simulation on this page shows you what's possible. Use libraries like Chart.js or Recharts to build the real thing.
+            
+            <div className="bg-black/30 p-4 rounded mb-4">
+              <h4 className="text-sm font-bold text-white mb-2">Example: Real-Time RPS Graph</h4>
+              <CodeBlock 
+                title="dashboard.html"
+                code={`<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas id="rpsChart" width="400" height="200"></canvas>
+    <script>
+        const ctx = document.getElementById('rpsChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Requests/Second',
+                    data: [],
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true } },
+                animation: { duration: 0 }
+            }
+        });
+
+        // Poll API every second
+        setInterval(async () => {
+            const res = await fetch('http://YOUR_PROXY_IP:3000/stats');
+            const stats = await res.json();
+            
+            // Add new data point
+            chart.data.labels.push(new Date().toLocaleTimeString());
+            chart.data.datasets[0].data.push(stats.rps);
+            
+            // Keep only last 30 points
+            if (chart.data.labels.length > 30) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+            
+            chart.update();
+        }, 1000);
+    </script>
+</body>
+</html>`}
+              />
+            </div>
+
+            <div className="bg-black/30 p-4 rounded mb-4">
+              <h4 className="text-sm font-bold text-white mb-2">Example: Top Attacking IPs Table</h4>
+              <CodeBlock 
+                title="ip-table.js"
+                code={`async function updateIPTable() {
+    const res = await fetch('http://YOUR_PROXY_IP:3000/stats');
+    const stats = await res.json();
+    
+    // Sort IPs by request count
+    const topIPs = Object.entries(stats.topIps)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 10);
+    
+    const table = document.getElementById('ipTable');
+    table.innerHTML = topIPs.map(([ip, data]) => \`
+        <tr class="\${data.blocked > data.count * 0.5 ? 'bg-red-900/20' : ''}">
+            <td>\${ip}</td>
+            <td>\${data.count}</td>
+            <td>\${data.blocked}</td>
+            <td>
+                <button onclick="banIP('\${ip}')" 
+                    class="bg-red-600 px-2 py-1 rounded text-xs">
+                    BAN
+                </button>
+            </td>
+        </tr>
+    \`).join('');
+}
+
+async function banIP(ip) {
+    await fetch(\`http://YOUR_PROXY_IP:3000/ban/\${ip}\`, { method: 'POST' });
+    alert(\`Banned \${ip}\`);
+    updateIPTable();
+}
+
+setInterval(updateIPTable, 2000);`}
+              />
+            </div>
+
+            <div className="bg-black/30 p-4 rounded">
+              <h4 className="text-sm font-bold text-white mb-2">Example: Status Code Pie Chart</h4>
+              <CodeBlock 
+                title="status-chart.js"
+                code={`const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['200 OK', '403 Forbidden', '444 Blocked', '5xx Errors'],
+        datasets: [{
+            data: [0, 0, 0, 0],
+            backgroundColor: [
+                'rgb(34, 197, 94)',
+                'rgb(251, 191, 36)',
+                'rgb(239, 68, 68)',
+                'rgb(168, 85, 247)'
+            ]
+        }]
+    }
+});
+
+setInterval(async () => {
+    const res = await fetch('http://YOUR_PROXY_IP:3000/stats');
+    const stats = await res.json();
+    
+    // Parse recent events for status codes
+    const codes = { '200': 0, '403': 0, '444': 0, '5xx': 0 };
+    stats.recentEvents.forEach(e => {
+        if (e.status === 200) codes['200']++;
+        else if (e.status === 403) codes['403']++;
+        else if (e.status === 444) codes['444']++;
+        else if (e.status >= 500) codes['5xx']++;
+    });
+    
+    statusChart.data.datasets[0].data = [codes['200'], codes['403'], codes['444'], codes['5xx']];
+    statusChart.update();
+}, 3000);`}
+              />
+            </div>
+
+            <p className="text-sm text-slate-500 mt-4 italic">
+              The interactive simulation at the top of this page demonstrates these concepts. 
+              Deploy your own dashboard using these examples and monitor your server in real-time!
             </p>
           </div>
 
