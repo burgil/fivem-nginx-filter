@@ -231,7 +231,7 @@ export default function FiveMFilterGuide() {
                 <h3 className="text-xl font-bold text-blue-400 mb-3">The "Blast Shield" Solution: NGINX Reverse Proxy Architecture</h3>
                 <p className="text-slate-300 leading-relaxed mb-4">
                   Deploy a <strong>Linux NGINX proxy</strong> as an upstream filter in front of your Windows FiveM server.
-                  This creates a <strong>defense-in-depth architecture</strong> where NGINX handles Layer 7 filtering, rate limiting, and connection management
+                  This creates a <strong>defense-in-depth architecture</strong> where NGINX handles Layer 7 filtering, rate limiting, and connection management<br />
                   <em>before</em> traffic reaches FXServer. Think of it as a dedicated firewall + load balancer + traffic analyzer combined.
                 </p>
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
