@@ -256,11 +256,11 @@ export default function FiveMFilterGuide() {
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
                     <div className="text-green-400 font-bold mb-2 flex items-center gap-2">
-                      <Lock className="w-4 h-4" /> Network Isolation (Different Subnet)
+                      <Lock className="w-4 h-4" /> Network Segmentation (Private Subnet)
                     </div>
                     <p className="text-xs text-slate-400">
-                      Your Windows server lives on a <strong>private subnet</strong> (10.0.0.0/24). The proxy has dual interfaces: one public (1.2.3.4), one private (10.0.0.1).
-                      Attackers scanning your public IP range won't find the game server. <strong>No VPN needed - just a different subnet from your hosting provider.</strong>
+                      Your Windows server lives on a <strong>private subnet</strong> (10.0.0.0/24) separate from the public subnet. The proxy has dual interfaces: one public (1.2.3.4), one private (10.0.0.1).
+                      Attackers scanning your public IP range won't find the game server. <strong>No VPN needed - just request a private subnet from your hosting provider.</strong>
                     </p>
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded border border-slate-700">
@@ -279,7 +279,7 @@ export default function FiveMFilterGuide() {
                     <li>• <strong>HTTP Floods:</strong> Rate limiter drops excess requests. Attacker sees 503 errors, FXServer stays responsive.</li>
                     <li>• <strong>UDP Floods:</strong> NGINX <code>stream</code> module proxies UDP with connection tracking. Malicious IPs get banned by watcher.</li>
                     <li>• <strong>SYN Floods:</strong> Linux kernel handles TCP better than Windows. NGINX absorbs SYN floods with <code>tcp_syncookies</code>.</li>
-                    <li>• <strong>IP Scanning:</strong> Private subnet means attackers can't find your game server even if they know your public proxy IP.</li>
+                    <li>• <strong>IP Obfuscation:</strong> Private subnet (separate from public subnet) means attackers can't find your game server IP even if they know your public proxy IP.</li>
                   </ul>
                 </div>
                 <p className="text-sm text-slate-400 italic mt-4">
@@ -301,7 +301,7 @@ export default function FiveMFilterGuide() {
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                     <div>
-                      <strong>Prevents IP Leakage:</strong> By using a private subnet, attackers can't discover your game server's real IP.
+                      <strong>Prevents IP Discovery:</strong> By placing your game server on a private subnet (not on the same public subnet as the proxy), attackers can't discover your game server's IP through IP scanning.
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
@@ -425,12 +425,12 @@ export default function FiveMFilterGuide() {
             `}</pre>
                 </div>
                 <div className="bg-amber-900/10 border border-amber-500/30 p-4 rounded-lg mt-4">
-                  <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Critical: Use Different Subnets</h4>
+                  <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Critical: Separate Public and Private Subnets</h4>
                   <p className="text-sm text-slate-400">
                     <strong>Do NOT</strong> put both servers on the same public subnet. If your proxy is <code>1.2.3.4</code>,
                     don't make your game server <code>1.2.3.5</code> – attackers will scan adjacent IPs.
-                    Instead, <strong>request a private subnet from your hosting provider</strong> (most offer this for free).
-                    Popular options: OVH vRack, Hetzner Cloud Private Networks, or simply ask your provider for a second IP on a different subnet.
+                    Instead, <strong>place your Windows server on a private subnet</strong> that's separate from your public-facing subnet (most hosting providers offer this for free).
+                    Popular options: OVH vRack, Hetzner Cloud Private Networks, or AWS/Azure VPC private subnets.
                   </p>
                 </div>
               </div>
@@ -757,28 +757,32 @@ set onesync on`}
               />
 
               <div className="mt-6 bg-slate-800/50 p-5 rounded-lg border border-slate-700">
-                <h4 className="font-bold text-white mb-3">Windows Firewall Rules</h4>
+                <h4 className="font-bold text-white mb-3">Windows Firewall Rules (Optional but Recommended)</h4>
                 <p className="text-sm text-slate-400 mb-3">
-                  On your Windows server, create an inbound rule to <strong>ONLY allow</strong> traffic from the proxy:
+                  On your Windows server, restrict <strong>port 30120</strong> to only accept connections from the proxy IP (10.0.0.1). 
+                  This doesn't affect other services - Windows can still access the internet, receive RDP connections, etc.
                 </p>
                 <CodeBlock
                   title="PowerShell (Run as Administrator)"
-                  code={`# Block all traffic on 30120 by default
-New-NetFirewallRule -DisplayName "Block FiveM Port" \`
+                  code={`# Block external traffic on FiveM port 30120 (TCP/UDP)
+New-NetFirewallRule -DisplayName "FiveM - Block Public" \`
   -Direction Inbound -LocalPort 30120 -Protocol TCP -Action Block
 
-New-NetFirewallRule -DisplayName "Block FiveM Port UDP" \`
+New-NetFirewallRule -DisplayName "FiveM - Block Public UDP" \`
   -Direction Inbound -LocalPort 30120 -Protocol UDP -Action Block
 
-# Allow ONLY from the proxy (10.0.0.1)
-New-NetFirewallRule -DisplayName "Allow FiveM from Proxy" \`
+# Allow ONLY from the proxy's private IP (10.0.0.1)
+New-NetFirewallRule -DisplayName "FiveM - Allow Proxy" \`
   -Direction Inbound -LocalPort 30120 -Protocol TCP \`
   -RemoteAddress 10.0.0.1 -Action Allow
 
-New-NetFirewallRule -DisplayName "Allow FiveM from Proxy UDP" \`
+New-NetFirewallRule -DisplayName "FiveM - Allow Proxy UDP" \`
   -Direction Inbound -LocalPort 30120 -Protocol UDP \`
   -RemoteAddress 10.0.0.1 -Action Allow`}
                 />
+                <p className="text-xs text-slate-500 mt-3">
+                  ⚠️ These rules only affect port 30120. All other ports (RDP 3389, HTTP 80, etc.) remain unaffected.
+                </p>
               </div>
 
               <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded">
